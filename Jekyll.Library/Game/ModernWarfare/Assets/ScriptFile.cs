@@ -71,7 +71,7 @@ namespace JekyllLibrary.Library
                     return JekyllStatus.MemoryChanged;
 
                 string addedScriptFolder = Path.Combine(asset.Name.Contains("scripts") ? "" : "scripts", asset.Name);
-                string path = Path.Combine("export", instance.Game.Name, addedScriptFolder);
+                string path = Path.Combine(instance.ExportFolder, addedScriptFolder);
 
                 // Create path
                 Directory.CreateDirectory(Path.GetDirectoryName(path));

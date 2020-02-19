@@ -21,7 +21,7 @@ namespace JekyllLibrary.Library
             }
             #endregion
 
-            public override string Name => "TypeType Font";
+            public override string Name => "Font";
             public override int Index => (int)AssetPool.ttf;
             public override long EndAddress { get { return StartAddress + (AssetCount * AssetSize); } set => throw new NotImplementedException(); }
             public override List<GameAsset> Load(JekyllInstance instance)
@@ -61,7 +61,7 @@ namespace JekyllLibrary.Library
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
                     return JekyllStatus.MemoryChanged;
 
-                string path = Path.Combine("export", instance.Game.Name, asset.Name);
+                string path = Path.Combine(instance.ExportFolder, asset.Name);
 
                 // Create path
                 Directory.CreateDirectory(Path.GetDirectoryName(path));

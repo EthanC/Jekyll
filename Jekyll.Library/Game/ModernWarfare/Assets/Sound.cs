@@ -84,7 +84,7 @@ namespace JekyllLibrary.Library
 
                 Directory.CreateDirectory(instance.SoundZoneFolder);
 
-                using (var writer = new StreamWriter(Path.Combine(instance.SoundZoneFolder, asset.Name + ".alias.csv")))
+                using (var writer = new StreamWriter(Path.Combine(instance.SoundZoneFolder, asset.Name + "_alias.csv")))
                 {
                     writer.WriteLine("Name,Secondary,FileSpec,");
 

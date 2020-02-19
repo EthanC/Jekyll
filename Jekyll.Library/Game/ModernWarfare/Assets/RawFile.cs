@@ -62,7 +62,7 @@ namespace JekyllLibrary.Library
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
                     return JekyllStatus.MemoryChanged;
 
-                string path = Path.Combine("export", instance.Game.Name, asset.Name);
+                string path = Path.Combine(instance.ExportFolder, asset.Name);
 
                 // Create path
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
