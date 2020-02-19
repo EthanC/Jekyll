@@ -12,7 +12,7 @@ namespace Jekyll.UI
 
         static void Main()
         {
-            Console.WriteLine("Jekyll: Call of Duty Asset Exporter");
+            Console.WriteLine("Jekyll: Call of Duty XAsset Exporter");
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.WriteLine("https://github.com/EthanC/Jekyll\n");
             Console.ResetColor();
@@ -21,9 +21,9 @@ namespace Jekyll.UI
 
             if (status == JekyllStatus.Success)
             {
-                foreach (var asset in Instance.Assets)
+                foreach (var xasset in Instance.XAssets)
                 {
-                    asset.AssetPool.Export(asset, Instance);
+                    xasset.XAssetPool.Export(xasset, Instance);
                 }
             }
             else

@@ -7,40 +7,38 @@ namespace JekyllLibrary.Library
 {
     public partial class ModernWarfare
     {
-        public class Localize : IAssetPool
+        public class Localize : IXAssetPool
         {
-            #region AssetStructures
             /// <summary>
-            /// Localize Asset Structure
+            /// Localize XAsset Structure
             /// </summary>
-            private struct LocalizeAsset
+            private struct LocalizeXAsset
             {
-                public long NamePointer;
-                public long RawDataPtr;
+                public long NamePointer { get; set; }
+                public long RawDataPtr { get; set; }
             }
-            #endregion
 
             public override string Name => "Localize";
-            public override int Index => (int)AssetPool.localize;
-            public override long EndAddress { get { return StartAddress + (AssetCount * AssetSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetPool.localize;
+            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
 
-            public override List<GameAsset> Load(JekyllInstance instance)
+            public override List<GameXAsset> Load(JekyllInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<GameXAsset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 24));
+                var poolInfo = instance.Reader.ReadStruct<XAssetPoolInfo>(instance.Game.BaseAddress + instance.Game.XAssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 24));
 
                 StartAddress = poolInfo.PoolPtr;
-                AssetSize = poolInfo.AssetSize;
-                AssetCount = poolInfo.PoolSize;
+                XAssetSize = poolInfo.XAssetSize;
+                XAssetCount = poolInfo.PoolSize;
 
                 Dictionary<string, string> entries = new Dictionary<string, string>();
 
-                for (int i = 0; i < AssetCount; i++)
+                for (int i = 0; i < XAssetCount; i++)
                 {
-                    var header = instance.Reader.ReadStruct<LocalizeAsset>(StartAddress + (i * AssetSize));
+                    var header = instance.Reader.ReadStruct<LocalizeXAsset>(StartAddress + (i * XAssetSize));
 
-                    if (IsNullAsset(header.NamePointer))
+                    if (IsNullXAsset(header.NamePointer))
                     {
                         continue;
                     }
@@ -71,7 +69,7 @@ namespace JekyllLibrary.Library
                 return results;
             }
 
-            public override JekyllStatus Export(GameAsset asset, JekyllInstance instance)
+            public override JekyllStatus Export(GameXAsset xasset, JekyllInstance instance)
             {
                 return JekyllStatus.Success;
             }

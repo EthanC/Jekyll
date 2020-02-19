@@ -1,6 +1,6 @@
 # Jekyll
 
-Jekyll is a Call of Duty asset exporter.
+Jekyll is a Call of Duty XAsset exporter.
 
 ## Requirements
 
@@ -10,20 +10,20 @@ Development will also require [Visual Studio 2019](https://visualstudio.microsof
 
 ## Usage
 
-Simply run a supported Call of Duty game, then run `Jekyll.exe` and allow the program to finish.
+Build the project from the source. Next, simply run a supported Call of Duty game, then run `Jekyll.exe` and allow the program to finish.
 
 ## Supported Games
 
 ### Call of Duty: Modern Warfare
 
+-   Gfx Maps\*
 -   Localized Strings
 -   Lua (Compiled)
 -   Map Entities
--   Map Geometry\*
 -   Raw Files
 -   Scripts (Compiled)
--   Sound Aliases
--   Stringtables
+-   Sound Globals
+-   String Tables
 -   TrueType Fonts
 -   Weapons\*
 
@@ -31,3 +31,10 @@ Simply run a supported Call of Duty game, then run `Jekyll.exe` and allow the pr
 
 -   Scobalula: [HydraX](https://github.com/Scobalula/HydraX) and [CODDataDumper](https://github.com/Scobalula/CoDDataDumper)
 -   JariKCoding: [ModernWarfareLeaker](https://github.com/JariKCoding/ModernWarfareLeaker)
+-   CamxxCore: [MW_RawfileDumper](https://github.com/CamxxCore/MW_RawfileDumper)
+
+## Disclaimer
+
+Jekyll was developed to allow users obtain to assets for use in the official Call of Duty SDKs, such as the Call of Duty: Black Ops 3 Mod Tools.
+
+All assets extracted by Jekyll are property of their respective owners. Jekyll is in no way, shape, or form associated with or endorsed by Activision or the subsidiary studios.

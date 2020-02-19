@@ -5,12 +5,12 @@ namespace JekyllLibrary.Library
     public partial class ModernWarfare : IGame
     {
         /// <summary>
-        /// Gets Modern Warfare's Game Name
+        /// Gets Call of Duty: Modern Warfare's Game Name
         /// </summary>
         public string Name => "Modern Warfare";
 
         /// <summary>
-        /// Gets Modern Warfare's Process Names
+        /// Gets Call of Duty: Modern Warfare's Process Names
         /// </summary>
         public string[] ProcessNames => new string[]
         {
@@ -18,15 +18,15 @@ namespace JekyllLibrary.Library
         };
 
         /// <summary>
-        /// Gets Modern Warfare's Asset Pools Addresses
+        /// Gets Call of Duty: Modern Warfare's XAsset Pools Addresses
         /// </summary>
-        public long[] AssetPoolsAddresses { get; set; } = new long[]
+        public long[] XAssetPoolsAddresses { get; set; } = new long[]
         {
             // 0xB030060
         };
 
         /// <summary>
-        /// Gets or Sets Modern Warfare's Base Address (ASLR)
+        /// Gets or Sets Call of Duty: Modern Warfare's Base Address (ASLR)
         /// </summary>
         public long BaseAddress { get; set; }
 
@@ -36,11 +36,11 @@ namespace JekyllLibrary.Library
         public int ProcessIndex { get; set; }
 
         /// <summary>
-        /// Gets or sets the list of Asset Pools
+        /// Gets or sets the list of XAsset Pools
         /// </summary>
-        public List<IAssetPool> AssetPools { get; set; }
+        public List<IXAssetPool> XAssetPools { get; set; }
 
-        private enum AssetPool : int
+        private enum XAssetPool : int
         {
             physicslibrary,
             physicssfxeventasset,
@@ -82,9 +82,11 @@ namespace JekyllLibrary.Library
             fogspline,
             animclass,
             playeranim,
+            gesture,
             localize = 41,
             attachment,
             weapon,
+            vfx,
             impactfx,
             surfacefx,
             aitype,
@@ -97,6 +99,7 @@ namespace JekyllLibrary.Library
             stringtable = 54,
             leaderboarddef,
             virtualleaderboarddef,
+            ddl,
             tracer,
             vehicle,
             addon_map_ents,
@@ -132,6 +135,7 @@ namespace JekyllLibrary.Library
             clientcharacter,
             clothasset,
             cinematicmotion,
+            accessory,
             locdmgtable,
             bulletpenetration,
             scriptbundle,
@@ -145,19 +149,20 @@ namespace JekyllLibrary.Library
             keyvaluepairs,
             stterrain,
             nativescriptpatch,
+            collisiontile,
+            execution,
             carryobject,
             soundbanklist,
             decalvolumematerial,
             decalvolumemask,
+            dynentitylist,
             fx_map_trzone,
             dlogschema,
-            edgelist,
-            defaultdummy,
-            dummy
+            edgelist
         }
 
-        // Modern Warfare Pool Data Structure
-        public struct AssetPoolInfo
+        // Call of Duty: Modern Warfare Pool Data Structure
+        public struct XAssetPoolInfo
         {
             // The beginning of the pool
             public long PoolPtr { get; set; }
@@ -169,23 +174,23 @@ namespace JekyllLibrary.Library
             public int PoolSize { get; set; }
 
             // The size of the asset header
-            public int AssetSize { get; set; }
+            public int XAssetSize { get; set; }
         }
 
         public bool ValidateAddresses(JekyllInstance instance)
         {
             BaseAddress = instance.Reader.GetBaseAddress();
 
-            foreach (var assetPoolsAddress in AssetPoolsAddresses)
+            foreach (var xassetPoolsAddress in XAssetPoolsAddresses)
             {
-                if (instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadStruct<AssetPoolInfo>(BaseAddress + assetPoolsAddress + 24 * 9).PoolPtr)) == "axis_guide_createfx")
+                if (instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadStruct<XAssetPoolInfo>(BaseAddress + xassetPoolsAddress + 24 * 9).PoolPtr)) == "axis_guide_createfx")
                 {
                     return true;
                 }
             }
 
             // Scan for it
-            var assetDBScan = instance.Reader.FindBytes(
+            var xassetDBScan = instance.Reader.FindBytes(
                 new byte?[] { 0x48, 0x8D, 0x04, 0x40, 0x4C, 0x8D, 0x8E, null, null, null, null, 0x4D, 0x8D, 0x0C, 0xC1, 0x8D, 0x42, 0xFF },
                 instance.Reader.GetBaseAddress(),
                 instance.Reader.GetBaseAddress() + instance.Reader.GetModuleMemorySize(),
@@ -197,11 +202,11 @@ namespace JekyllLibrary.Library
                 true);
 
             // Validate results
-            if (assetDBScan.Length > 0 && stringDBScan.Length > 0)
+            if (xassetDBScan.Length > 0 && stringDBScan.Length > 0)
             {
-                AssetPoolsAddresses = new long[] { instance.Reader.ReadInt32(assetDBScan[0] + 0x7) };
+                XAssetPoolsAddresses = new long[] { instance.Reader.ReadInt32(xassetDBScan[0] + 0x7) };
 
-                if (instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadStruct<AssetPoolInfo>(BaseAddress + AssetPoolsAddresses[0] + 24 * 9).PoolPtr)) == "axis_guide_createfx")
+                if (instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadStruct<XAssetPoolInfo>(BaseAddress + XAssetPoolsAddresses[0] + 24 * 9).PoolPtr)) == "axis_guide_createfx")
                 {
                     return true;
                 }

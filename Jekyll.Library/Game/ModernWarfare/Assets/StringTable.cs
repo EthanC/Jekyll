@@ -7,80 +7,80 @@ namespace JekyllLibrary.Library
 {
     public partial class ModernWarfare
     {
-        public class StringTable : IAssetPool
+        public class StringTable : IXAssetPool
         {
-            #region AssetStructures
             /// <summary>
-            /// String Table Asset Structure
+            /// String Table XAsset Structure
             /// </summary>
-            private struct StringTableAsset
+            private struct StringTableXAsset
             {
                 /// <summary>
                 /// String Table Cell Structure
                 /// </summary>
-                public long NamePointer;
-                public int ColumnCount;
-                public int RowCount;
-                public int Unk;
-                public long CellsPointer;
-                public long IndicesPointer;
-                public long StringsPtr;
+                public long NamePointer { get; set; }
+                public int ColumnCount { get; set; }
+                public int RowCount { get; set; }
+                public int Unk { get; set; }
+                public long CellsPointer { get; set; }
+                public long IndicesPointer { get; set; }
+                public long StringsPtr { get; set; }
             }
-            #endregion
 
-            public override string Name => "Stringtable";
-            public override int Index => (int)AssetPool.stringtable;
-            public override long EndAddress { get { return StartAddress + (AssetCount * AssetSize); } set => throw new NotImplementedException(); }
-            public override List<GameAsset> Load(JekyllInstance instance)
+            public override string Name => "String Table";
+            public override int Index => (int)XAssetPool.stringtable;
+            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+            public override List<GameXAsset> Load(JekyllInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<GameXAsset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 24));
+                var poolInfo = instance.Reader.ReadStruct<XAssetPoolInfo>(instance.Game.BaseAddress + instance.Game.XAssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 24));
 
                 StartAddress = poolInfo.PoolPtr;
-                AssetSize = poolInfo.AssetSize;
-                AssetCount = poolInfo.PoolSize;
+                XAssetSize = poolInfo.XAssetSize;
+                XAssetCount = poolInfo.PoolSize;
 
-                for (int i = 0; i < AssetCount; i++)
+                for (int i = 0; i < XAssetCount; i++)
                 {
-                    var header = instance.Reader.ReadStruct<StringTableAsset>(StartAddress + (i * AssetSize));
+                    var header = instance.Reader.ReadStruct<StringTableXAsset>(StartAddress + (i * XAssetSize));
 
-                    if (IsNullAsset(header.NamePointer))
+                    if (IsNullXAsset(header.NamePointer))
+                    {
                         continue;
+                    }
 
-                    results.Add(new GameAsset()
+                    results.Add(new GameXAsset()
                     {
                         Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
-                        HeaderAddress = StartAddress + (i * AssetSize),
-                        AssetPool = this,
+                        HeaderAddress = StartAddress + (i * XAssetSize),
+                        XAssetPool = this,
                         Type = Name,
-                        Information = string.Format("Rows: {0} - Columns: {1}", header.RowCount, header.ColumnCount)
+                        Information = $"Rows: {header.RowCount}, Columns: {header.ColumnCount}"
                     });
                 }
 
                 return results;
             }
 
-            public override JekyllStatus Export(GameAsset asset, JekyllInstance instance)
+            public override JekyllStatus Export(GameXAsset xasset, JekyllInstance instance)
             {
-                var header = instance.Reader.ReadStruct<StringTableAsset>(asset.HeaderAddress);
+                var header = instance.Reader.ReadStruct<StringTableXAsset>(xasset.HeaderAddress);
 
-                if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                {
                     return JekyllStatus.MemoryChanged;
+                }
 
-                string path = Path.Combine(instance.ExportFolder, asset.Name);
+                string path = Path.Combine(instance.ExportFolder, xasset.Name);
 
-                // Create path
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                // Output result
                 var result = new StringBuilder();
 
-                // Loop through rows
+                // Rows for the table
                 int index = 0;
                 for (int x = 0; x < header.RowCount; x++)
                 {
-                    // Loop through columns for this row
+                    // Columns for the row
                     for (int y = 0; y < header.ColumnCount; y++)
                     {
                         int stringIndex = instance.Reader.ReadInt16(header.CellsPointer + (2 * index));
@@ -88,13 +88,13 @@ namespace JekyllLibrary.Library
                         result.Append(str + ",");
                         index++;
                     }
-                    // Create new line
+
                     result.AppendLine();
                 }
-                // Write result
+
                 File.WriteAllText(path, result.ToString());
 
-                Console.WriteLine($"Exported {Name} {asset.Name}");
+                Console.WriteLine($"Exported {Name} {xasset.Name}");
 
                 return JekyllStatus.Success;
             }

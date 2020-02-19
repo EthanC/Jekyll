@@ -6,13 +6,12 @@ namespace JekyllLibrary.Library
 {
     public partial class ModernWarfare
     {
-        public class Sound : IAssetPool
+        public class SoundGlobal : IXAssetPool
         {
-            #region AssetStructures
             /// <summary>
-            /// Sound Asset Structure
+            /// Sound XAsset Structure
             /// </summary>
-            private struct SoundAsset
+            private struct SoundXAsset
             {
                 public long NamePointer { get; set; }
                 public long ZoneNamePointer { get; set; }
@@ -37,37 +36,38 @@ namespace JekyllLibrary.Library
                 public long SecondaryPointer { get; set; }
                 public long FileSpec { get; set; }
             }
-            #endregion
 
-            public override string Name => "Sound Alias";
-            public override int Index => (int)AssetPool.soundbank;
+            public override string Name => "Sound Global";
+            public override int Index => (int)XAssetPool.soundbank;
             public override long EndAddress { get; set; }
-            public override List<GameAsset> Load(JekyllInstance instance)
+            public override List<GameXAsset> Load(JekyllInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<GameXAsset>();
 
-                foreach (int index in new int[] { (int)AssetPool.soundglobals, (int)AssetPool.soundbank })
+                foreach (int index in new int[] { (int)XAssetPool.soundglobals, (int)XAssetPool.soundbank })
                 {
-                    var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (index * 24));
+                    var poolInfo = instance.Reader.ReadStruct<XAssetPoolInfo>(instance.Game.BaseAddress + instance.Game.XAssetPoolsAddresses[instance.Game.ProcessIndex] + (index * 24));
 
                     StartAddress = poolInfo.PoolPtr;
-                    AssetSize = poolInfo.AssetSize;
-                    AssetCount = poolInfo.PoolSize;
+                    XAssetSize = poolInfo.XAssetSize;
+                    XAssetCount = poolInfo.PoolSize;
 
-                    for (int i = 0; i < AssetCount; i++)
+                    for (int i = 0; i < XAssetCount; i++)
                     {
-                        var header = instance.Reader.ReadStruct<SoundAsset>(StartAddress + (i * AssetSize));
+                        var header = instance.Reader.ReadStruct<SoundXAsset>(StartAddress + (i * XAssetSize));
 
-                        if (IsNullAsset(header.NamePointer))
+                        if (IsNullXAsset(header.NamePointer))
+                        {
                             continue;
+                        }
 
-                        results.Add(new GameAsset()
+                        results.Add(new GameXAsset()
                         {
                             Name = instance.Reader.ReadNullTerminatedString(header.NamePointer).Split(':')[0],
-                            HeaderAddress = StartAddress + (i * AssetSize),
-                            AssetPool = this,
+                            HeaderAddress = StartAddress + (i * XAssetSize),
+                            XAssetPool = this,
                             Type = Name,
-                            Information = string.Format("Aliases: {0}", header.AliasCount)
+                            Information = $"Aliases: {header.AliasCount}"
                         });
                     }
                 }
@@ -75,34 +75,34 @@ namespace JekyllLibrary.Library
                 return results;
             }
 
-            public override JekyllStatus Export(GameAsset asset, JekyllInstance instance)
+            public override JekyllStatus Export(GameXAsset xasset, JekyllInstance instance)
             {
-                var header = instance.Reader.ReadStruct<SoundAsset>(asset.HeaderAddress);
+                var header = instance.Reader.ReadStruct<SoundXAsset>(xasset.HeaderAddress);
 
-                if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer).Split(':')[0])
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer).Split(':')[0])
+                {
                     return JekyllStatus.MemoryChanged;
+                }
 
                 Directory.CreateDirectory(instance.SoundZoneFolder);
 
-                using (var writer = new StreamWriter(Path.Combine(instance.SoundZoneFolder, asset.Name + "_alias.csv")))
+                using (var writer = new StreamWriter(Path.Combine(instance.SoundZoneFolder, xasset.Name + "_alias.csv")))
                 {
                     writer.WriteLine("Name,Secondary,FileSpec,");
 
                     for (int j = 0; j < header.AliasCount; j++)
                     {
                         var aliasData = instance.Reader.ReadStruct<SoundAlias>(header.AliasesPointer + (j * 32));
+
                         for (int k = 0; k < aliasData.EntriesCount; k++)
                         {
                             var aliasEntryData = instance.Reader.ReadStruct<SoundAliasEntry>(aliasData.EntriesPointer + (k * 0xE8));
-                            writer.WriteLine("{0},{1},{2},",
-                                instance.Reader.ReadNullTerminatedString(aliasEntryData.NamePtr),
-                                instance.Reader.ReadNullTerminatedString(aliasEntryData.SecondaryPointer),
-                                instance.Reader.ReadNullTerminatedString(aliasEntryData.FileSpec));
+                            writer.WriteLine(instance.Reader.ReadNullTerminatedString(aliasEntryData.NamePtr) + "," + instance.Reader.ReadNullTerminatedString(aliasEntryData.SecondaryPointer) + "," + instance.Reader.ReadNullTerminatedString(aliasEntryData.FileSpec));
                         }
                     }
                 }
 
-                Console.WriteLine($"Exported {Name} {asset.Name}");
+                Console.WriteLine($"Exported {Name} {xasset.Name}");
 
                 return JekyllStatus.Success;
             }

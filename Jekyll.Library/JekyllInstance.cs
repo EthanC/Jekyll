@@ -25,9 +25,9 @@ namespace JekyllLibrary.Library
         public ProcessReader Reader { get; set; }
 
         /// <summary>
-        /// Gets or Sets the loaded Assets
+        /// Gets or Sets the loaded XAssets
         /// </summary>
-        public List<GameAsset> Assets { get; set; }
+        public List<GameXAsset> XAssets { get; set; }
 
         /// <summary>
         /// Gets the Export Path
@@ -51,8 +51,12 @@ namespace JekyllLibrary.Library
             var games = AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where(p => gameType.IsAssignableFrom(p));
 
             foreach (var game in games)
+            {
                 if (!game.IsInterface)
+                {
                     Games.Add((IGame)Activator.CreateInstance(game));
+                }
+            }
         }
 
         /// <summary>
@@ -65,9 +69,13 @@ namespace JekyllLibrary.Library
                 Process[] processes = Process.GetProcessesByName(Game.ProcessNames[Game.ProcessIndex]);
 
                 if (processes.Length == 0)
+                {
                     return JekyllStatus.GameClosed;
+                }
                 if (processes[0].Id != Reader.ActiveProcess.Id)
+                {
                     return JekyllStatus.MemoryChanged;
+                }
 
                 return JekyllStatus.Success;
             }
@@ -76,22 +84,28 @@ namespace JekyllLibrary.Library
         }
 
         /// <summary>
-        /// Gets Asset Pools for the given Game
+        /// Gets XAsset Pools for the given Game
         /// </summary>
-        public static List<IAssetPool> GetAssetPools(IGame game)
+        public static List<IXAssetPool> GetXAssetPools(IGame game)
         {
-            var poolType = typeof(IAssetPool);
-            var results = new List<IAssetPool>();
+            var poolType = typeof(IXAssetPool);
+            var results = new List<IXAssetPool>();
 
             var pools = AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where(p => poolType.IsAssignableFrom(p));
 
             foreach (var pool in pools)
+            {
                 if (!pool.IsInterface)
                 {
-                    if (pool.DeclaringType is Type gameType/* && pool.Name == "ScriptFile"*/)
+                    if (pool.DeclaringType is Type gameType)
+                    {
                         if (gameType == game.GetType())
-                            results.Add((IAssetPool)Activator.CreateInstance(pool));
+                        {
+                            results.Add((IXAssetPool)Activator.CreateInstance(pool));
+                        }
+                    }
                 }
+            }
 
 
             return results;
@@ -117,18 +131,18 @@ namespace JekyllLibrary.Library
 
                             if (Game.ValidateAddresses(this))
                             {
-                                Game.AssetPools = GetAssetPools(Game);
-
-                                Assets = new List<GameAsset>();
-
-                                foreach (var assetPool in Game.AssetPools)
-                                {
-                                    Assets.AddRange(assetPool.Load(this));
-                                }
-
                                 Console.ForegroundColor = ConsoleColor.Green;
                                 Console.WriteLine($"Loaded Call of Duty: {Game.Name} (0x{Game.BaseAddress})");
                                 Console.ResetColor();
+
+                                Game.XAssetPools = GetXAssetPools(Game);
+
+                                XAssets = new List<GameXAsset>();
+
+                                foreach (var xassetPool in Game.XAssetPools)
+                                {
+                                    XAssets.AddRange(xassetPool.Load(this));
+                                }
 
                                 status = JekyllStatus.Success;
                             }

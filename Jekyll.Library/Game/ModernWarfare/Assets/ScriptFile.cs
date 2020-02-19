@@ -7,82 +7,83 @@ namespace JekyllLibrary.Library
 {
     public partial class ModernWarfare
     {
-        public class ScriptFile : IAssetPool
+        public class ScriptFile : IXAssetPool
         {
-            #region AssetStructures
             /// <summary>
-            /// Lua File Asset Structure
+            /// Script File XAsset Structure
             /// </summary>
-            private struct ScriptFileAsset
+            private struct ScriptFileXAsset
             {
-                public long NamePointer;
-                public int compressedLength;
-                public int len;
-                public long byteCodeLen;
-                public long buffer;
-                public long bytecode;
+                public long NamePointer { get; set; }
+                public int CompressedLength { get; set; }
+                public int Len { get; set; }
+                public long ByteCodeLen { get; set; }
+                public long Buffer { get; set; }
+                public long Bytecode { get; set; }
             }
-            #endregion
 
             public override string Name => "Script";
-            public override int Index => (int)AssetPool.scriptfile;
-            public override long EndAddress { get { return StartAddress + (AssetCount * AssetSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetPool.scriptfile;
+            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
 
-            public override List<GameAsset> Load(JekyllInstance instance)
+            public override List<GameXAsset> Load(JekyllInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<GameXAsset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 24));
+                var poolInfo = instance.Reader.ReadStruct<XAssetPoolInfo>(instance.Game.BaseAddress + instance.Game.XAssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 24));
 
                 StartAddress = poolInfo.PoolPtr;
-                AssetSize = poolInfo.AssetSize;
-                AssetCount = poolInfo.PoolSize;
+                XAssetSize = poolInfo.XAssetSize;
+                XAssetCount = poolInfo.PoolSize;
 
-                for (int i = 0; i < AssetCount; i++)
+                for (int i = 0; i < XAssetCount; i++)
                 {
-                    var header = instance.Reader.ReadStruct<ScriptFileAsset>(StartAddress + (i * AssetSize));
+                    var header = instance.Reader.ReadStruct<ScriptFileXAsset>(StartAddress + (i * XAssetSize));
 
-                    if (IsNullAsset(header.NamePointer))
-                        continue;
-
-                    if (header.buffer == 0)
+                    if (IsNullXAsset(header.NamePointer))
                     {
                         continue;
                     }
 
-                    results.Add(new GameAsset()
+                    if (header.Buffer == 0)
+                    {
+                        continue;
+                    }
+
+                    results.Add(new GameXAsset()
                     {
                         Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
-                        HeaderAddress = StartAddress + (i * AssetSize),
-                        AssetPool = this,
+                        HeaderAddress = StartAddress + (i * XAssetSize),
+                        XAssetPool = this,
                         Type = Name,
-                        Information = string.Format("Size: 0x{0:X}", header.compressedLength)
+                        Information = $"Size: 0x{header.CompressedLength}"
                     });
                 }
 
                 return results;
             }
 
-            public override JekyllStatus Export(GameAsset asset, JekyllInstance instance)
+            public override JekyllStatus Export(GameXAsset xasset, JekyllInstance instance)
             {
-                var header = instance.Reader.ReadStruct<ScriptFileAsset>(asset.HeaderAddress);
+                var header = instance.Reader.ReadStruct<ScriptFileXAsset>(xasset.HeaderAddress);
 
-                if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                {
                     return JekyllStatus.MemoryChanged;
+                }
 
-                string addedScriptFolder = Path.Combine(asset.Name.Contains("scripts") ? "" : "scripts", asset.Name);
+                string addedScriptFolder = Path.Combine(xasset.Name.Contains("scripts") ? "" : "scripts", xasset.Name);
                 string path = Path.Combine(instance.ExportFolder, addedScriptFolder);
 
-                // Create path
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                MemoryStream DecodedCodeStream = Decode(instance.Reader.ReadBytes(header.buffer + 2, header.compressedLength - 2));
+                MemoryStream DecodedCodeStream = Decode(instance.Reader.ReadBytes(header.Buffer + 2, header.CompressedLength - 2));
                 using (var outputStream = new FileStream(path, FileMode.Create))
                 {
                     DecodedCodeStream.CopyTo(outputStream);
                 }
 
-                Console.WriteLine($"Exported {Name} {asset.Name}");
+                Console.WriteLine($"Exported {Name} {xasset.Name}");
 
                 return JekyllStatus.Success;
             }

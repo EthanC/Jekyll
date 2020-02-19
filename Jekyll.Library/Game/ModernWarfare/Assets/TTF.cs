@@ -6,71 +6,72 @@ namespace JekyllLibrary.Library
 {
     public partial class ModernWarfare
     {
-        public class TTF : IAssetPool
+        public class TTF : IXAssetPool
         {
-            #region AssetStructures
             /// <summary>
-            /// TTF Asset Structure
+            /// TTF XAsset Structure
             /// </summary>
-            private struct TTFAsset
+            private struct TTFXAsset
             {
-                public long NamePointer;
-                public int AssetSize;
-                public long RawDataPtr;
-                public int Unk;
+                public long NamePointer { get; set; }
+                public int AssetSize { get; set; }
+                public long RawDataPtr { get; set; }
+                public int Unk { get; set; }
             }
-            #endregion
 
-            public override string Name => "Font";
-            public override int Index => (int)AssetPool.ttf;
-            public override long EndAddress { get { return StartAddress + (AssetCount * AssetSize); } set => throw new NotImplementedException(); }
-            public override List<GameAsset> Load(JekyllInstance instance)
+            public override string Name => "TrueType Font";
+            public override int Index => (int)XAssetPool.ttf;
+            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+            public override List<GameXAsset> Load(JekyllInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<GameXAsset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 24));
+                var poolInfo = instance.Reader.ReadStruct<XAssetPoolInfo>(instance.Game.BaseAddress + instance.Game.XAssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 24));
 
                 StartAddress = poolInfo.PoolPtr;
-                AssetSize = poolInfo.AssetSize;
-                AssetCount = poolInfo.PoolSize;
+                XAssetSize = poolInfo.XAssetSize;
+                XAssetCount = poolInfo.PoolSize;
 
-                for (int i = 0; i < AssetCount; i++)
+                for (int i = 0; i < XAssetCount; i++)
                 {
-                    var header = instance.Reader.ReadStruct<TTFAsset>(StartAddress + (i * AssetSize));
+                    var header = instance.Reader.ReadStruct<TTFXAsset>(StartAddress + (i * XAssetSize));
 
-                    if (IsNullAsset(header.NamePointer))
+                    if (IsNullXAsset(header.NamePointer))
+                    {
                         continue;
+                    }
 
-                    results.Add(new GameAsset()
+                    results.Add(new GameXAsset()
                     {
                         Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
-                        HeaderAddress = StartAddress + (i * AssetSize),
-                        AssetPool = this,
+                        HeaderAddress = StartAddress + (i * XAssetSize),
+                        XAssetPool = this,
                         Type = Name,
-                        Information = string.Format("Size: 0x{0:X}", header.AssetSize)
+                        Information = $"Size: 0x{header.AssetSize}"
                     });
                 }
 
                 return results;
             }
 
-            public override JekyllStatus Export(GameAsset asset, JekyllInstance instance)
+            public override JekyllStatus Export(GameXAsset xasset, JekyllInstance instance)
             {
-                var header = instance.Reader.ReadStruct<TTFAsset>(asset.HeaderAddress);
+                var header = instance.Reader.ReadStruct<TTFXAsset>(xasset.HeaderAddress);
 
-                if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                {
                     return JekyllStatus.MemoryChanged;
+                }
 
-                string path = Path.Combine(instance.ExportFolder, asset.Name);
+                string path = Path.Combine(instance.ExportFolder, xasset.Name);
 
-                // Create path
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
                 byte[] buffer = instance.Reader.ReadBytes(header.RawDataPtr, (int)header.AssetSize);
 
                 File.WriteAllBytes(path, buffer);
 
-                Console.WriteLine($"Exported {Name} {asset.Name}");
+                Console.WriteLine($"Exported {Name} {xasset.Name}");
 
                 return JekyllStatus.Success;
             }

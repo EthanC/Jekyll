@@ -8,75 +8,75 @@ namespace JekyllLibrary.Library
 {
     public partial class ModernWarfare
     {
-        public class Weapon : IAssetPool
+        public class Weapon : IXAssetPool
         {
-            #region AssetStructures
             /// <summary>
-            /// TTF Asset Structure
+            /// Weapon XAsset Structure
             /// </summary>
-            private struct WeaponAsset
+            private struct WeaponXAsset
             {
-                public long NamePointer;
-                public long Unk;
-                public long DisplayNamePointer;
-                public long VariantsFileNamePointer;
+                public long NamePointer { get; set; }
+                public long Unk { get; set; }
+                public long DisplayNamePointer { get; set; }
+                public long VariantsFileNamePointer { get; set; }
                 public long UnkPtr;
                 [MarshalAs(UnmanagedType.ByValArray, SizeConst = 14)]
                 public WeaponAttachmentType[] WeaponAttachmentTypes;
-                public int UnkInt1;
-                public int UnkInt2;
-                public long UnkPtr1;
-                public long UnkPtr2;
-                public long UnkNull;
-                public long WeaponIconImagePtr;
-                public long UnkNull2;
-                public long WeaponIconImagePtr2;
+                public int UnkInt1 { get; set; }
+                public int UnkInt2 { get; set; }
+                public long UnkPtr1 { get; set; }
+                public long UnkPtr2 { get; set; }
+                public long UnkNull { get; set; }
+                public long WeaponIconImagePtr { get; set; }
+                public long UnkNull2 { get; set; }
+                public long WeaponIconImagePtr2 { get; set; }
             }
 
             private struct WeaponAttachmentType
             {
-                public long AttachmentCount;
-                public long AttachmentPointer;
+                public long AttachmentCount { get; set; }
+                public long AttachmentPointer { get; set; }
             }
 
-            private struct AttachmentAsset
+            private struct AttachmentXAsset
             {
                 public long NamePointer;
                 [MarshalAs(UnmanagedType.ByValArray, SizeConst = 9)]
                 public long[] UnkPadding;
-                public long WorldModelPointer;
-                public long ViewModelPointer;
+                public long WorldModelPointer { get; set; }
+                public long ViewModelPointer { get; set; }
             }
-            #endregion
 
             public override string Name => "Weapon";
-            public override int Index => (int)AssetPool.weapon;
-            public override long EndAddress { get { return StartAddress + (AssetCount * AssetSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetPool.weapon;
+            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
 
-            public override List<GameAsset> Load(JekyllInstance instance)
+            public override List<GameXAsset> Load(JekyllInstance instance)
             {
                 // Incomplete
-                return new List<GameAsset>();
+                return new List<GameXAsset>();
             }
-            public List<GameAsset> Load(JekyllInstance instance, int i)
+            public List<GameXAsset> Load(JekyllInstance instance, int i)
             {
-                var results = new List<GameAsset>();
+                var results = new List<GameXAsset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 24));
+                var poolInfo = instance.Reader.ReadStruct<XAssetPoolInfo>(instance.Game.BaseAddress + instance.Game.XAssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 24));
 
                 StartAddress = poolInfo.PoolPtr;
-                AssetSize = poolInfo.AssetSize;
-                AssetCount = poolInfo.PoolSize;
+                XAssetSize = poolInfo.XAssetSize;
+                XAssetCount = poolInfo.PoolSize;
 
-                for (i = 0; i < AssetCount; i++)
+                for (i = 0; i < XAssetCount; i++)
                 {
-                    var header = instance.Reader.ReadStruct<WeaponAsset>(StartAddress + (i * AssetSize));
+                    var header = instance.Reader.ReadStruct<WeaponXAsset>(StartAddress + (i * XAssetSize));
 
-                    if (IsNullAsset(header.NamePointer))
+                    if (IsNullXAsset(header.NamePointer))
+                    {
                         continue;
+                    }
 
                     /*
-                    var RawData = instance.Reader.ReadBytes(StartAddress + (i * AssetSize), (int)AssetSize);
+                    var RawData = instance.Reader.ReadBytes(StartAddress + (i * XAssetSize), (int)XAssetSize);
                     string exportName = Path.Combine("iw8_weapon", instance.Reader.ReadNullTerminatedString(header.NamePointer));
                     Directory.CreateDirectory(Path.GetDirectoryName(exportName));
                     File.WriteAllBytes(exportName, RawData);
@@ -85,8 +85,8 @@ namespace JekyllLibrary.Library
                     if (instance.Reader.ReadNullTerminatedString(header.NamePointer) == "iw8_ar_akilo47_mp")
                     {
                         /*
-                        long pos = StartAddress + (i * AssetSize);
-                        for (int j = 0; j < AssetSize; j += 8)
+                        long pos = StartAddress + (i * XAssetSize);
+                        for (int j = 0; j < XAssetSize; j += 8)
                         {
                             Console.WriteLine(instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadInt64((pos + j))) + 8));
                         }
@@ -102,8 +102,7 @@ namespace JekyllLibrary.Library
                             Console.WriteLine(instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(pos + j)));
                         }
 
-                        var Att = instance.Reader.ReadStruct<AttachmentAsset>(
-                            instance.Reader.ReadInt64(header.WeaponAttachmentTypes[1].AttachmentPointer));
+                        var Att = instance.Reader.ReadStruct<AttachmentXAsset>(instance.Reader.ReadInt64(header.WeaponAttachmentTypes[1].AttachmentPointer));
                         Console.WriteLine(instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadInt64(Att.WorldModelPointer))));
 
                         /*
@@ -115,56 +114,66 @@ namespace JekyllLibrary.Library
                     }
 
                     var result = new StringBuilder();
-                    result.AppendLine("Weapon: " + instance.Reader.ReadNullTerminatedString(header.NamePointer));
+                    result.AppendLine($"Weapon: {instance.Reader.ReadNullTerminatedString(header.NamePointer)}");
+                    result.AppendLine("Attachments:");
 
-                    result.AppendLine("\nAttachments:");
                     foreach (var AttackmentType in header.WeaponAttachmentTypes)
                     {
                         for (int d = 0; d < AttackmentType.AttachmentCount; d++)
                         {
-                            var attachmentAsset = instance.Reader.ReadStruct<AttachmentAsset>(instance.Reader.ReadInt64(AttackmentType.AttachmentPointer + d * 8));
-                            result.AppendLine("Attachment: " +
-                                              instance.Reader.ReadNullTerminatedString(attachmentAsset.NamePointer));
+                            var attachmentAsset = instance.Reader.ReadStruct<AttachmentXAsset>(instance.Reader.ReadInt64(AttackmentType.AttachmentPointer + d * 8));
+
+                            result.AppendLine($"Attachment: {instance.Reader.ReadNullTerminatedString(attachmentAsset.NamePointer)}");
+
                             string worldModel = instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadInt64(attachmentAsset.WorldModelPointer)));
                             string viewModel = instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadInt64(attachmentAsset.ViewModelPointer)));
+
                             if (worldModel != "")
-                                result.AppendLine("Worldmodel: " + worldModel);
+                            {
+                                result.AppendLine($"World Model: {worldModel}");
+                            }
+
                             if (viewModel != "")
-                                result.AppendLine("Viewmodel: " + viewModel);
+                            {
+                                result.AppendLine($"View Model: {viewModel}");
+                            }
+
                             result.AppendLine();
                         }
                     }
-                    string path = Path.Combine("export", instance.Game.Name, "weapon", instance.Reader.ReadNullTerminatedString(header.NamePointer) + ".txt");
+
+                    string path = Path.Combine(instance.ExportFolder, "weapon", instance.Reader.ReadNullTerminatedString(header.NamePointer) + ".txt");
                     Directory.CreateDirectory(Path.GetDirectoryName(path));
 
                     File.WriteAllText(path, result.ToString());
 
-                    results.Add(new GameAsset()
+                    results.Add(new GameXAsset()
                     {
                         Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
-                        HeaderAddress = StartAddress + (i * AssetSize),
-                        AssetPool = this,
+                        HeaderAddress = StartAddress + (i * XAssetSize),
+                        XAssetPool = this,
                         Type = Name,
-                        Information = string.Format("Size: 0x{0:X}", 5)
+                        Information = "Size: 0x5"
                     });
                 }
 
                 return results;
             }
 
-            public override JekyllStatus Export(GameAsset asset, JekyllInstance instance)
+            public override JekyllStatus Export(GameXAsset xasset, JekyllInstance instance)
             {
-                var header = instance.Reader.ReadStruct<WeaponAsset>(asset.HeaderAddress);
+                var header = instance.Reader.ReadStruct<WeaponXAsset>(xasset.HeaderAddress);
 
-                if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                {
                     return JekyllStatus.MemoryChanged;
+                }
 
-                string path = Path.Combine(instance.ExportFolder, asset.Name);
+                string path = Path.Combine(instance.ExportFolder, xasset.Name);
 
-                // Create path
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                Console.WriteLine($"Exported {Name} {asset.Name}");
+                Console.WriteLine($"Exported {Name} {xasset.Name}");
 
                 return JekyllStatus.Success;
             }

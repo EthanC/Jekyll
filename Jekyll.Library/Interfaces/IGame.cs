@@ -15,9 +15,9 @@ namespace JekyllLibrary.Library
         string[] ProcessNames { get; }
 
         /// <summary>
-        /// Gets the Memory Addresses of the Asset Pools
+        /// Gets the Memory Addresses of the XAsset Pools
         /// </summary>
-        long[] AssetPoolsAddresses { get; set; }
+        long[] XAssetPoolsAddresses { get; set; }
 
         /// <summary>
         /// Gets or Sets the Base Address
@@ -30,9 +30,9 @@ namespace JekyllLibrary.Library
         int ProcessIndex { get; set; }
 
         /// <summary>
-        /// Gets or Sets the List of Asset Pools
+        /// Gets or Sets the List of XAsset Pools
         /// </summary>
-        List<IAssetPool> AssetPools { get; set; }
+        List<IXAssetPool> XAssetPools { get; set; }
 
         /// <summary>
         /// Validates the games addresses
