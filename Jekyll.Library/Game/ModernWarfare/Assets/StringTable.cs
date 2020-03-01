@@ -29,6 +29,7 @@ namespace JekyllLibrary.Library
             public override string Name => "String Table";
             public override int Index => (int)XAssetPool.stringtable;
             public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
                 var results = new List<GameXAsset>();

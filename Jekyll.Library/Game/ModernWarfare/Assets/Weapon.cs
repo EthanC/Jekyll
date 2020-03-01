@@ -53,11 +53,6 @@ namespace JekyllLibrary.Library
 
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
-                // Incomplete
-                return new List<GameXAsset>();
-            }
-            public List<GameXAsset> Load(JekyllInstance instance, int i)
-            {
                 var results = new List<GameXAsset>();
 
                 var poolInfo = instance.Reader.ReadStruct<XAssetPoolInfo>(instance.Game.BaseAddress + instance.Game.XAssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 24));
@@ -66,7 +61,7 @@ namespace JekyllLibrary.Library
                 XAssetSize = poolInfo.XAssetSize;
                 XAssetCount = poolInfo.PoolSize;
 
-                for (i = 0; i < XAssetCount; i++)
+                for (int i = 0; i < XAssetCount; i++)
                 {
                     var header = instance.Reader.ReadStruct<WeaponXAsset>(StartAddress + (i * XAssetSize));
 
@@ -74,44 +69,45 @@ namespace JekyllLibrary.Library
                     {
                         continue;
                     }
-
-                    /*
+                    
                     var RawData = instance.Reader.ReadBytes(StartAddress + (i * XAssetSize), (int)XAssetSize);
-                    string exportName = Path.Combine("iw8_weapon", instance.Reader.ReadNullTerminatedString(header.NamePointer));
+                    string exportName = Path.Combine(instance.ExportFolder, "weapon", instance.Reader.ReadNullTerminatedString(header.NamePointer));
+
                     Directory.CreateDirectory(Path.GetDirectoryName(exportName));
                     File.WriteAllBytes(exportName, RawData);
-                    */
 
-                    if (instance.Reader.ReadNullTerminatedString(header.NamePointer) == "iw8_ar_akilo47_mp")
-                    {
-                        /*
-                        long pos = StartAddress + (i * XAssetSize);
-                        for (int j = 0; j < XAssetSize; j += 8)
-                        {
-                            Console.WriteLine(instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadInt64((pos + j))) + 8));
-                        }
-                        */
+                    // Testing
+                    //if (instance.Reader.ReadNullTerminatedString(header.NamePointer) == "iw8_sm_augolf_mp")
+                    //{
+                    //    long pos = StartAddress + (i * XAssetSize);
 
-                        var RawData = instance.Reader.ReadBytes(instance.Reader.ReadInt64(header.WeaponAttachmentTypes[1].AttachmentPointer), (int)968);
-                        string exportName = Path.Combine("iw8_weapon", instance.Reader.ReadNullTerminatedString(header.NamePointer) + "att");
-                        Directory.CreateDirectory(Path.GetDirectoryName(exportName));
-                        File.WriteAllBytes(exportName, RawData);
-                        long pos = instance.Reader.ReadInt64(header.WeaponAttachmentTypes[1].AttachmentPointer);
-                        for (int j = 0; j < 968; j += 8)
-                        {
-                            Console.WriteLine(instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(pos + j)));
-                        }
+                    //    for (int j = 0; j < XAssetSize; j += 8)
+                    //    {
+                    //        Console.WriteLine(instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadInt64((pos + j))) + 8));
+                    //    }
 
-                        var Att = instance.Reader.ReadStruct<AttachmentXAsset>(instance.Reader.ReadInt64(header.WeaponAttachmentTypes[1].AttachmentPointer));
-                        Console.WriteLine(instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadInt64(Att.WorldModelPointer))));
+                    //    var raw = instance.Reader.ReadBytes(instance.Reader.ReadInt64(header.WeaponAttachmentTypes[1].AttachmentPointer), (int)968);
 
-                        /*
-                        for (int d = 0; d < header.WeaponAttachmentTypes[1].AttachmentCount; d++)
-                        {
-                            Console.WriteLine(instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadInt64((header.WeaponAttachmentTypes[1].AttachmentPointer + d * 8)))));
-                        }
-                        */
-                    }
+                    //    string name = Path.Combine("iw8_weapon", instance.Reader.ReadNullTerminatedString(header.NamePointer) + "att");
+                    //    Directory.CreateDirectory(Path.GetDirectoryName(name));
+                    //    File.WriteAllBytes(name, raw);
+
+                    //    long position = instance.Reader.ReadInt64(header.WeaponAttachmentTypes[1].AttachmentPointer);
+
+                    //    for (int j = 0; j < 968; j += 8)
+                    //    {
+                    //        Console.WriteLine(instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(pos + j)));
+                    //    }
+
+                    //    var Att = instance.Reader.ReadStruct<AttachmentXAsset>(instance.Reader.ReadInt64(header.WeaponAttachmentTypes[1].AttachmentPointer));
+
+                    //    Console.WriteLine(instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadInt64(Att.WorldModelPointer))));
+
+                    //    for (int d = 0; d < header.WeaponAttachmentTypes[1].AttachmentCount; d++)
+                    //    {
+                    //        Console.WriteLine(instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadInt64((header.WeaponAttachmentTypes[1].AttachmentPointer + d * 8)))));
+                    //    }
+                    //}
 
                     var result = new StringBuilder();
                     result.AppendLine($"Weapon: {instance.Reader.ReadNullTerminatedString(header.NamePointer)}");
