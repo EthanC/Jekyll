@@ -51,10 +51,10 @@ namespace JekyllLibrary.Library
                     }
                     else
                     {
-                        Console.WriteLine($"Exported {Name} {key}");
-
                         string value = instance.Reader.ReadNullTerminatedString(header.RawDataPtr);
                         entries.Add(key, value);
+
+                        Console.WriteLine($"Exported {Name} {key}");
                     }
                 }
 

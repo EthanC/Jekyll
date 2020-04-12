@@ -174,7 +174,7 @@ namespace PhilLibX.IO
                 for (int i = 0; i < buffer.Length; i++)
                 {
                     if (buffer[i] == 0x0)
-                        return Encoding.ASCII.GetString(result.ToArray());
+                        return Encoding.UTF8.GetString(result.ToArray());
 
                     result.Add(buffer[i]);
                 }
