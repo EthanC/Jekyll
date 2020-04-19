@@ -99,7 +99,7 @@ namespace JekyllLibrary.Library
             stringtable = 54,
             leaderboarddef,
             virtualleaderboarddef,
-            ddl,
+            ddl = 57,
             tracer,
             vehicle,
             addon_map_ents,

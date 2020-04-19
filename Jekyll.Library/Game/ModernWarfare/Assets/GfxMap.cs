@@ -24,6 +24,7 @@ namespace JekyllLibrary.Library
             public override string Name => "Gfx Map";
             public override int Index => (int)XAssetPool.gfx_map;
             public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
                 var results = new List<GameXAsset>();

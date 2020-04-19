@@ -40,6 +40,7 @@ namespace JekyllLibrary.Library
             public override string Name => "Sound Global";
             public override int Index => (int)XAssetPool.soundbank;
             public override long EndAddress { get; set; }
+
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
                 var results = new List<GameXAsset>();

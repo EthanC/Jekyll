@@ -76,6 +76,8 @@ namespace JekyllLibrary.Library
                     Directory.CreateDirectory(Path.GetDirectoryName(exportName));
                     File.WriteAllBytes(exportName, RawData);
 
+                    // Console.WriteLine($"Exported {Name} {exportName.Split("\\")[^1]}");
+
                     // Testing
                     //if (instance.Reader.ReadNullTerminatedString(header.NamePointer) == "iw8_sm_augolf_mp")
                     //{

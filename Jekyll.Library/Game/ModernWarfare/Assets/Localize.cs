@@ -53,7 +53,7 @@ namespace JekyllLibrary.Library
                     {
                         string value = instance.Reader.ReadNullTerminatedString(header.RawDataPtr);
                         entries.Add(key, value);
-
+                        
                         Console.WriteLine($"Exported {Name} {key}");
                     }
                 }
