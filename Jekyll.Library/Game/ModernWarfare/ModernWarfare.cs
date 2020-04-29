@@ -196,7 +196,7 @@ namespace JekyllLibrary.Library
                 instance.Reader.GetBaseAddress() + instance.Reader.GetModuleMemorySize(),
                 true);
             var stringDBScan = instance.Reader.FindBytes(
-                new byte?[] { 0x4C, 0x8B, 0xC2, 0x48, 0x8D, 0x1D, null, null, null, null, 0x48, 0x2B, 0xCB },
+                new byte?[] { 0x4D, 0x8B, 0xC7, 0x48, 0x03, 0x1D, null, null, null, null, 0x49, 0x8B, 0xD5 },
                 instance.Reader.GetBaseAddress(),
                 instance.Reader.GetBaseAddress() + instance.Reader.GetModuleMemorySize(),
                 true);
