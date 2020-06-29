@@ -25,6 +25,44 @@ Run a supported Call of Duty title, then run `Jekyll.UI.exe` and allow the progr
 -   String Tables
 -   TrueType Fonts
 
+### Call of Duty: WWII
+
+-   Localize
+-   Lua Files\*
+-   Map Entities
+-   Raw Files
+-   Script Files\*
+-   String Tables
+-   TrueType Fonts
+
+### Call of Duty: Infinite Warfare
+
+-   Localize
+-   Lua Files\*
+-   Map Entities
+-   Raw Files
+-   Script Files\*
+-   String Tables
+-   TrueType Fonts
+
+### Call of Duty: Modern Warfare Remastered
+
+-   Localize
+-   Lua Files\*
+-   Map Entities
+-   Raw Files
+-   Script Files\*
+-   String Tables
+-   TrueType Fonts
+
+### Call of Duty: Black Ops III
+
+-   Localize
+-   Map Entities
+-   Raw Files
+-   String Tables
+-   TrueType Fonts
+
 ## Credits
 
 -   [Scobalula](https://github.com/Scobalula) - [PhilLibX](https://github.com/Scobalula/PhilLibX)
