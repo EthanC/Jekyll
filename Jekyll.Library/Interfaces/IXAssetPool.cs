@@ -5,60 +5,47 @@ namespace JekyllLibrary.Library
     public abstract class IXAssetPool
     {
         /// <summary>
-        /// Gets the XAsset Pool Name
+        /// Gets the name of the XAsset Pool.
         /// </summary>
         public abstract string Name { get; }
 
         /// <summary>
-        /// Gets the Setting Group for this XAsset Pool
-        /// </summary>
-        // string SettingGroup { get; }
-
-        /// <summary>
-        /// Gets the XAsset Pool Index
+        /// Gets the index of the XAsset Pool.
         /// </summary>
         public abstract int Index { get; }
 
         /// <summary>
-        /// Gets the XAsset Header Size
-        /// </summary>
-        public int XAssetSize { get; set; }
-
-        /// <summary>
-        /// Gets or Sets the number of XAsset slots in this pool
-        /// </summary>
-        public int XAssetCount { get; set; }
-
-        /// <summary>
-        /// Gets or Sets the start Address of this pool
+        /// Gets or sets the start address of the XAsset Pool.
         /// </summary>
         public long StartAddress { get; set; }
 
         /// <summary>
-        /// Gets or Sets the end Address of this pool
+        /// Gets or sets the end address of the XAsset Pool.
         /// </summary>
         public abstract long EndAddress { get; set; }
 
         /// <summary>
-        /// Loads XAssets from the given XAsset Pool
+        /// Gets or sets the header size of XAssets in the XAsset Pool.
+        /// </summary>
+        public int XAssetSize { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of slots in the XAsset Pool.
+        /// </summary>
+        public int XAssetCount { get; set; }
+
+        /// <summary>
+        /// Loads XAssets from the specified XAsset Pool.
         /// </summary>
         public abstract List<GameXAsset> Load(JekyllInstance instance);
 
         /// <summary>
-        /// Exports the given XAsset from the game
+        /// Exports the given XAsset from the current game.
         /// </summary>
         public abstract JekyllStatus Export(GameXAsset xasset, JekyllInstance instance);
 
         /// <summary>
-        /// Checks if the given XAsset is null
-        /// </summary>
-        public bool IsNullXAsset(GameXAsset xasset)
-        {
-            return IsNullXAsset(xasset.NameLocation);
-        }
-
-        /// <summary>
-        /// Checks if the given pointer points to a null slot
+        /// Determines if the specified XAsset is a null slot.
         /// </summary>
         public bool IsNullXAsset(long nameAddress)
         {

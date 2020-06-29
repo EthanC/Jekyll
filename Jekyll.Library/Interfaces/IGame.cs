@@ -5,45 +5,50 @@ namespace JekyllLibrary.Library
     public interface IGame
     {
         /// <summary>
-        /// Gets or Sets the Game's name
+        /// Gets the name of the game.
         /// </summary>
         string Name { get; }
 
         /// <summary>
-        /// Gets the Game's Process Names
+        /// Gets the process names of the game.
         /// </summary>
         string[] ProcessNames { get; }
 
         /// <summary>
-        /// Gets the Memory Addresses of the XAsset Pools
-        /// </summary>
-        long[] XAssetPoolsAddresses { get; set; }
-
-        /// <summary>
-        /// Gets or Sets the Base Address
-        /// </summary>
-        long BaseAddress { get; set; }
-
-        /// <summary>
-        /// Gets or Sets the Process Index (Matches the Address + Process Name Array)
+        /// Gets or sets the process index for the game.
         /// </summary>
         int ProcessIndex { get; set; }
 
         /// <summary>
-        /// Gets or Sets the List of XAsset Pools
+        /// Gets or sets the base address for the game.
+        /// </summary>
+        long BaseAddress { get; set; }
+
+        /// <summary>
+        /// Gets or sets the memory address for the XAsset Pools of the game.
+        /// </summary>
+        long XAssetPoolsAddress { get; set; }
+
+        /// <summary>
+        /// Gets or sets the memory address for the XAsset Pool Sizes of the game (optional).
+        /// </summary>
+        long XAssetPoolSizesAddress { get; set; }
+
+        /// <summary>
+        /// Gets or sets the list of XAsset Pools for the game.
         /// </summary>
         List<IXAssetPool> XAssetPools { get; set; }
 
         /// <summary>
-        /// Validates the games addresses
+        /// Initializes the game and validates its associated addresses.
         /// </summary>
-        /// <returns>True if the addresses are valid, otherwise false</returns>
-        bool ValidateAddresses(JekyllInstance instance);
+        /// <returns>True if valid addresses are found, otherwise false.</returns>
+        bool InitializeGame(JekyllInstance instance);
 
         /// <summary>
-        /// Creates a shallow copy of the Game Object
+        /// Creates a shallow copy of the IGame object.
         /// </summary>
-        /// <returns>Copied Game Object</returns>
+        /// <returns>Shallow copy of the IGame object.</returns>
         object Clone();
     }
 }

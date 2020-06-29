@@ -10,47 +10,37 @@ namespace JekyllLibrary.Library
     public class JekyllInstance
     {
         /// <summary>
-        /// Gets or Sets the List of Supported Games
+        /// Gets or sets the list of supported games.
         /// </summary>
         public List<IGame> Games { get; set; }
 
         /// <summary>
-        /// Gets or Sets the current Game
+        /// Gets or sets the current game.
         /// </summary>
         public IGame Game { get; set; }
 
         /// <summary>
-        /// Gets or Sets the current Process Reader
+        /// Gets or sets the current process reader.
         /// </summary>
         public ProcessReader Reader { get; set; }
 
         /// <summary>
-        /// Gets or Sets the loaded XAssets
+        /// Gets or sets the loaded XAssets.
         /// </summary>
         public List<GameXAsset> XAssets { get; set; }
 
         /// <summary>
-        /// Gets the Export Path
+        /// Gets the export path for the current game.
         /// </summary>
-        public string ExportFolder { get { return Path.Combine("export", Game.Name); } }
-
-        /// <summary>
-        /// Gets the Sound Path
-        /// </summary>
-        public string SoundFolder { get { return Path.Combine(ExportFolder, "sound"); } }
-
-        /// <summary>
-        /// Gets the Sound Zone Path
-        /// </summary>
-        public string SoundZoneFolder { get { return Path.Combine(SoundFolder, "zone"); } }
+        public string ExportPath { get { return Path.Combine("export", Game.Name); } }
 
         public JekyllInstance()
         {
             Games = new List<IGame>();
-            var gameType = typeof(IGame);
-            var games = AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where(p => gameType.IsAssignableFrom(p));
+            Type gameType = typeof(IGame);
+            IEnumerable<Type> games = AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where(p => gameType.IsAssignableFrom(p));
 
-            foreach (var game in games)
+            foreach (Type game in games)
             {
                 if (!game.IsInterface)
                 {
@@ -60,7 +50,7 @@ namespace JekyllLibrary.Library
         }
 
         /// <summary>
-        /// Checks to ensure game is running and hasn't changed
+        /// Validate that the current game is running and hasn't changed.
         /// </summary>
         public JekyllStatus ValidateGame()
         {
@@ -72,7 +62,7 @@ namespace JekyllLibrary.Library
                 {
                     return JekyllStatus.GameClosed;
                 }
-                if (processes[0].Id != Reader.ActiveProcess.Id)
+                else if (processes[0].Id != Reader.ActiveProcess.Id)
                 {
                     return JekyllStatus.MemoryChanged;
                 }
@@ -84,16 +74,16 @@ namespace JekyllLibrary.Library
         }
 
         /// <summary>
-        /// Gets XAsset Pools for the given Game
+        /// Gets the XAsset Pools for the current game.
         /// </summary>
         public static List<IXAssetPool> GetXAssetPools(IGame game)
         {
-            var poolType = typeof(IXAssetPool);
-            var results = new List<IXAssetPool>();
+            Type poolType = typeof(IXAssetPool);
+            List<IXAssetPool> results = new List<IXAssetPool>();
 
-            var pools = AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where(p => poolType.IsAssignableFrom(p));
+            IEnumerable<Type> pools = AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where(p => poolType.IsAssignableFrom(p));
 
-            foreach (var pool in pools)
+            foreach (Type pool in pools)
             {
                 if (!pool.IsInterface)
                 {
@@ -115,11 +105,11 @@ namespace JekyllLibrary.Library
         {
             Process[] processes = Process.GetProcesses();
 
-            var status = JekyllStatus.FailedToFindGame;
+            JekyllStatus status = JekyllStatus.FailedToFindGame;
 
-            foreach (var process in processes)
+            foreach (Process process in processes)
             {
-                foreach (var game in Games)
+                foreach (IGame game in Games)
                 {
                     for (int i = 0; i < game.ProcessNames.Length; i++)
                     {
@@ -129,17 +119,17 @@ namespace JekyllLibrary.Library
                             Game.ProcessIndex = i;
                             Reader = new ProcessReader(process);
 
-                            if (Game.ValidateAddresses(this))
+                            if (Game.InitializeGame(this))
                             {
                                 Console.ForegroundColor = ConsoleColor.Green;
-                                Console.WriteLine($"Loaded Call of Duty: {Game.Name} (0x{Game.BaseAddress})");
+                                Console.WriteLine($"Loaded Call of Duty: {Game.Name} (0x{Game.XAssetPoolsAddress})");
                                 Console.ResetColor();
 
                                 Game.XAssetPools = GetXAssetPools(Game);
 
                                 XAssets = new List<GameXAsset>();
 
-                                foreach (var xassetPool in Game.XAssetPools)
+                                foreach (IXAssetPool xassetPool in Game.XAssetPools)
                                 {
                                     XAssets.AddRange(xassetPool.Load(this));
                                 }

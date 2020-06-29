@@ -8,8 +8,14 @@ namespace JekyllLibrary.Library
     {
         public class SoundGlobal : IXAssetPool
         {
+            public override string Name => "Sound Bank";
+
+            public override int Index => (int)XAssetPool.soundbank + 1;
+
+            public override long EndAddress { get; set; }
+
             /// <summary>
-            /// Sound XAsset Structure
+            /// Structure of a Modern Warfare SoundBank XAsset.
             /// </summary>
             private struct SoundXAsset
             {
@@ -37,25 +43,26 @@ namespace JekyllLibrary.Library
                 public long FileSpec { get; set; }
             }
 
-            public override string Name => "Sound Global";
-            public override int Index => (int)XAssetPool.soundbank;
-            public override long EndAddress { get; set; }
-
+            /// <summary>
+            /// Load the valid XAssets for the SoundBank XAsset Pool.
+            /// </summary>
+            /// <param name="instance"></param>
+            /// <returns>List of SoundBank XAsset objects.</returns>
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
-                var results = new List<GameXAsset>();
+                List<GameXAsset> results = new List<GameXAsset>();
 
-                foreach (int index in new int[] { (int)XAssetPool.soundglobals, (int)XAssetPool.soundbank })
+                foreach (int index in new int[] { (int)XAssetPool.soundglobals + 1, (int)XAssetPool.soundbank + 1 })
                 {
-                    var poolInfo = instance.Reader.ReadStruct<XAssetPoolInfo>(instance.Game.BaseAddress + instance.Game.XAssetPoolsAddresses[instance.Game.ProcessIndex] + (index * 24));
+                    XAssetPoolData poolInfo = instance.Reader.ReadStruct<XAssetPoolData>(instance.Game.BaseAddress + instance.Game.XAssetPoolsAddress + (index * 24));
 
-                    StartAddress = poolInfo.PoolPtr;
+                    StartAddress = poolInfo.PoolPointer;
                     XAssetSize = poolInfo.XAssetSize;
                     XAssetCount = poolInfo.PoolSize;
 
                     for (int i = 0; i < XAssetCount; i++)
                     {
-                        var header = instance.Reader.ReadStruct<SoundXAsset>(StartAddress + (i * XAssetSize));
+                        SoundXAsset header = instance.Reader.ReadStruct<SoundXAsset>(StartAddress + (i * XAssetSize));
 
                         if (IsNullXAsset(header.NamePointer))
                         {
@@ -68,7 +75,6 @@ namespace JekyllLibrary.Library
                             HeaderAddress = StartAddress + (i * XAssetSize),
                             XAssetPool = this,
                             Type = Name,
-                            Information = $"Aliases: {header.AliasCount}"
                         });
                     }
                 }
@@ -76,34 +82,40 @@ namespace JekyllLibrary.Library
                 return results;
             }
 
+            /// <summary>
+            /// Exports the specified SoundBank XAsset.
+            /// </summary>
+            /// <param name="xasset"></param>
+            /// <param name="instance"></param>
+            /// <returns>Status of the export operation.</returns>
             public override JekyllStatus Export(GameXAsset xasset, JekyllInstance instance)
             {
-                var header = instance.Reader.ReadStruct<SoundXAsset>(xasset.HeaderAddress);
+                SoundXAsset header = instance.Reader.ReadStruct<SoundXAsset>(xasset.HeaderAddress);
 
                 if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer).Split(':')[0])
                 {
                     return JekyllStatus.MemoryChanged;
                 }
 
-                Directory.CreateDirectory(instance.SoundZoneFolder);
+                string path = Path.Combine(instance.ExportPath, "sound", xasset.Name);
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                using (var writer = new StreamWriter(Path.Combine(instance.SoundZoneFolder, xasset.Name + "_alias.csv")))
+                using (StreamWriter writer = new StreamWriter(Path.Combine(path + ".csv")))
                 {
-                    writer.WriteLine("Name,Secondary,FileSpec,");
-
                     for (int j = 0; j < header.AliasCount; j++)
                     {
-                        var aliasData = instance.Reader.ReadStruct<SoundAlias>(header.AliasesPointer + (j * 32));
+                        SoundAlias aliasData = instance.Reader.ReadStruct<SoundAlias>(header.AliasesPointer + (j * 32));
 
                         for (int k = 0; k < aliasData.EntriesCount; k++)
                         {
-                            var aliasEntryData = instance.Reader.ReadStruct<SoundAliasEntry>(aliasData.EntriesPointer + (k * 0xE8));
+                            SoundAliasEntry aliasEntryData = instance.Reader.ReadStruct<SoundAliasEntry>(aliasData.EntriesPointer + (k * 0xE8));
+
                             writer.WriteLine(instance.Reader.ReadNullTerminatedString(aliasEntryData.NamePtr) + "," + instance.Reader.ReadNullTerminatedString(aliasEntryData.SecondaryPointer) + "," + instance.Reader.ReadNullTerminatedString(aliasEntryData.FileSpec));
                         }
                     }
                 }
 
-                Console.WriteLine($"Exported {Name} {xasset.Name}");
+                Console.WriteLine($"Exported {xasset.Type} {xasset.Name}");
 
                 return JekyllStatus.Success;
             }

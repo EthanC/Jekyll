@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace JekyllLibrary.Library
@@ -9,40 +10,44 @@ namespace JekyllLibrary.Library
     {
         public class StringTable : IXAssetPool
         {
+            public override string Name => "String Table";
+
+            public override int Index => (int)XAssetPool.stringtable;
+
+            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+
             /// <summary>
-            /// String Table XAsset Structure
+            /// Structure of a Modern Warfare StringTable XAsset.
             /// </summary>
             private struct StringTableXAsset
             {
-                /// <summary>
-                /// String Table Cell Structure
-                /// </summary>
                 public long NamePointer { get; set; }
                 public int ColumnCount { get; set; }
                 public int RowCount { get; set; }
-                public int Unk { get; set; }
+                public int Unknown1 { get; set; }
                 public long CellsPointer { get; set; }
                 public long IndicesPointer { get; set; }
                 public long StringsPtr { get; set; }
             }
 
-            public override string Name => "String Table";
-            public override int Index => (int)XAssetPool.stringtable;
-            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
-
+            /// <summary>
+            /// Load the valid XAssets for the StringTable XAsset Pool.
+            /// </summary>
+            /// <param name="instance"></param>
+            /// <returns>List of StringTable XAsset objects.</returns>
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
-                var results = new List<GameXAsset>();
+                List<GameXAsset> results = new List<GameXAsset>();
 
-                var poolInfo = instance.Reader.ReadStruct<XAssetPoolInfo>(instance.Game.BaseAddress + instance.Game.XAssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 24));
+                XAssetPoolData poolInfo = instance.Reader.ReadStruct<XAssetPoolData>(instance.Game.BaseAddress + instance.Game.XAssetPoolsAddress + (Index * Marshal.SizeOf<XAssetPoolData>()));
 
-                StartAddress = poolInfo.PoolPtr;
+                StartAddress = poolInfo.PoolPointer;
                 XAssetSize = poolInfo.XAssetSize;
                 XAssetCount = poolInfo.PoolSize;
 
                 for (int i = 0; i < XAssetCount; i++)
                 {
-                    var header = instance.Reader.ReadStruct<StringTableXAsset>(StartAddress + (i * XAssetSize));
+                    StringTableXAsset header = instance.Reader.ReadStruct<StringTableXAsset>(StartAddress + (i * XAssetSize));
 
                     if (IsNullXAsset(header.NamePointer))
                     {
@@ -52,41 +57,46 @@ namespace JekyllLibrary.Library
                     results.Add(new GameXAsset()
                     {
                         Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
-                        HeaderAddress = StartAddress + (i * XAssetSize),
-                        XAssetPool = this,
                         Type = Name,
-                        Information = $"Rows: {header.RowCount}, Columns: {header.ColumnCount}"
+                        Size = XAssetSize,
+                        XAssetPool = this,
+                        HeaderAddress = StartAddress + (i * XAssetSize),
                     });
                 }
 
                 return results;
             }
 
+            /// <summary>
+            /// Exports the specified StringTable XAsset.
+            /// </summary>
+            /// <param name="xasset"></param>
+            /// <param name="instance"></param>
+            /// <returns>Status of the export operation.</returns>
             public override JekyllStatus Export(GameXAsset xasset, JekyllInstance instance)
             {
-                var header = instance.Reader.ReadStruct<StringTableXAsset>(xasset.HeaderAddress);
+                StringTableXAsset header = instance.Reader.ReadStruct<StringTableXAsset>(xasset.HeaderAddress);
 
                 if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
                 {
                     return JekyllStatus.MemoryChanged;
                 }
 
-                string path = Path.Combine(instance.ExportFolder, xasset.Name);
-
+                string path = Path.Combine(instance.ExportPath, xasset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                var result = new StringBuilder();
+                StringBuilder result = new StringBuilder();
 
-                // Rows for the table
                 int index = 0;
                 for (int x = 0; x < header.RowCount; x++)
                 {
-                    // Columns for the row
                     for (int y = 0; y < header.ColumnCount; y++)
                     {
                         int stringIndex = instance.Reader.ReadInt16(header.CellsPointer + (2 * index));
                         string str = instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(header.StringsPtr + (8 * stringIndex)));
-                        result.Append(str + ",");
+
+                        result.Append($"{str},");
+
                         index++;
                     }
 
@@ -95,7 +105,7 @@ namespace JekyllLibrary.Library
 
                 File.WriteAllText(path, result.ToString());
 
-                Console.WriteLine($"Exported {Name} {xasset.Name}");
+                Console.WriteLine($"Exported {xasset.Type} {xasset.Name}");
 
                 return JekyllStatus.Success;
             }
