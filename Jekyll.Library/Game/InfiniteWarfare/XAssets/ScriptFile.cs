@@ -87,9 +87,17 @@ namespace JekyllLibrary.Library
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
                 MemoryStream DecodedCodeStream = Decode(instance.Reader.ReadBytes(header.DataPointer + 2, header.CompressedSize - 2));
-                using (var outputStream = new FileStream(path, FileMode.Create))
+
+                try
                 {
-                    DecodedCodeStream.CopyTo(outputStream);
+                    using (var outputStream = new FileStream(path, FileMode.Create))
+                    {
+                        DecodedCodeStream.CopyTo(outputStream);
+                    }
+                }
+                catch
+                {
+                    return JekyllStatus.Exception;
                 }
 
                 Console.WriteLine($"Exported {xasset.Type} {xasset.Name}");
@@ -107,9 +115,16 @@ namespace JekyllLibrary.Library
                 MemoryStream output = new MemoryStream();
                 MemoryStream input = new MemoryStream(data);
 
-                using (DeflateStream deflateStream = new DeflateStream(input, CompressionMode.Decompress))
+                try
                 {
-                    deflateStream.CopyTo(output);
+                    using (DeflateStream deflateStream = new DeflateStream(input, CompressionMode.Decompress))
+                    {
+                        deflateStream.CopyTo(output);
+                    }
+                }
+                catch
+                {
+                    return null;
                 }
 
                 output.Flush();
