@@ -63,6 +63,15 @@ Run a supported Call of Duty title, then run `Jekyll.UI.exe` and allow the progr
 -   String Tables
 -   TrueType Fonts
 
+### Call of Duty: Advanced Warfare
+
+-   Localize
+-   Lua Files\*
+-   Map Entities
+-   Raw Files
+-   Script Files\*
+-   String Tables
+
 ## Credits
 
 -   [Scobalula](https://github.com/Scobalula) - [PhilLibX](https://github.com/Scobalula/PhilLibX)
