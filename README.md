@@ -72,6 +72,15 @@ Run a supported Call of Duty title, then run `Jekyll.UI.exe` and allow the progr
 -   Script Files\*
 -   String Tables
 
+### Call of Duty: Ghosts
+
+-   Localize
+-   Lua Files\*
+-   Map Entities
+-   Raw Files
+-   Script Files\*
+-   String Tables
+
 ## Credits
 
 -   [Scobalula](https://github.com/Scobalula) - [PhilLibX](https://github.com/Scobalula/PhilLibX)
