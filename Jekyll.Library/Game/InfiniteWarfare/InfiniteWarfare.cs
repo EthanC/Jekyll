@@ -32,14 +32,14 @@ namespace JekyllLibrary.Library
         public long BaseAddress { get; set; }
 
         /// <summary>
-        /// Gets or sets the XAsset Pools address of Infinite Warfare.
+        /// Gets or sets the DBAssetPools address of Infinite Warfare.
         /// </summary>
-        public long XAssetPoolsAddress { get; set; }
+        public long DBAssetPools { get; set; }
 
         /// <summary>
-        /// Gets or sets the XAsset Pool Sizes address of Infinite Warfare.
+        /// Gets or sets the DBAssetPoolSizes address of Infinite Warfare.
         /// </summary>
-        public long XAssetPoolSizesAddress { get; set; }
+        public long DBAssetPoolSizes { get; set; }
 
         /// <summary>
         /// Gets or sets the list of XAsset Pools of Infinite Warfare.
@@ -47,9 +47,9 @@ namespace JekyllLibrary.Library
         public List<IXAssetPool> XAssetPools { get; set; }
 
         /// <summary>
-        /// XAsset Pools of Infinite Warfare.
+        /// XAsset Types of Infinite Warfare.
         /// </summary>
-        private enum XAssetPool : int
+        private enum XAssetType : int
         {
             physicslibrary,
             physicssfxeventasset,
@@ -136,22 +136,22 @@ namespace JekyllLibrary.Library
         /// <summary>
         /// Structure of an Infinite Warfare XAsset Pool.
         /// </summary>
-        public struct XAssetPoolData
+        public struct DBAssetPool
         {
-            public int FreeHeaderPointer { get; set; }
-            public int PoolEntries { get; set; }
+            public int FreeHead { get; set; }
+            public int Entries { get; set; }
         }
 
         /// <summary>
         /// Structure of an Infinite Warfare XAsset Pool Size.
         /// </summary>
-        public struct XAssetPoolSizesData
+        public struct DBAssetPoolSize
         {
             public int PoolSize { get; set; }
         }
 
         /// <summary>
-        /// Validates and sets the XAsset Pools and XAsset Pool Sizes addresses of Infinite Warfare.
+        /// Validates and sets the DBAssetPools and DBAssetPoolSizes addresses of Infinite Warfare.
         /// </summary>
         /// <param name="instance"></param>
         /// <returns>True if addresses are valid, otherwise false.</returns>
@@ -160,30 +160,44 @@ namespace JekyllLibrary.Library
             BaseAddress = instance.Reader.GetBaseAddress();
             long moduleSize = instance.Reader.GetModuleMemorySize();
 
-            long[] scanXAssetPools = instance.Reader.FindBytes(
+            long[] scanDBAssetPools = instance.Reader.FindBytes(
                 new byte?[] { 0x48, 0x63, 0xC1, 0x48, 0x8D, 0x15, null, null, null, null, 0x48, 0x8B, 0x8C, 0xC2 },
                 BaseAddress,
                 BaseAddress + moduleSize,
                 true);
-            long[] scanXAssetPoolSizes = instance.Reader.FindBytes(
+            long[] scanDBAssetPoolSizes = instance.Reader.FindBytes(
                 new byte?[] { 0x72, null, 0x48, 0x63, 0xC1, 0x48, 0x8D, 0x0D, null, null, null, null, 0x83, 0x3C, 0x81 },
                 BaseAddress,
                 BaseAddress + moduleSize,
                 true);
 
-            if (scanXAssetPools.Length > 0 && scanXAssetPoolSizes.Length > 0)
+            if (scanDBAssetPools.Length > 0 && scanDBAssetPoolSizes.Length > 0)
             {
-                XAssetPoolsAddress = instance.Reader.ReadInt32(scanXAssetPools[0] + 0xE) + BaseAddress;
-                XAssetPoolSizesAddress = instance.Reader.ReadInt32(scanXAssetPoolSizes[0] + 0x8) + (scanXAssetPoolSizes[0] + 0xC);
+                DBAssetPools = instance.Reader.ReadInt32(scanDBAssetPools[0] + 0xE) + BaseAddress;
+                DBAssetPoolSizes = instance.Reader.ReadInt32(scanDBAssetPoolSizes[0] + 0x8) + (scanDBAssetPoolSizes[0] + 0xC);
 
                 // In Infinite Warfare, viewmodel_default will always be the first entry in the XModel XAsset Pool.
-                if (instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadInt64(XAssetPoolsAddress + (Marshal.SizeOf<XAssetPoolData>() * (int)XAssetPool.xmodel)) + Marshal.SizeOf<XAssetPoolData>())) == "viewmodel_default")
+                if (GetFirstXModel(instance) == "viewmodel_default")
                 {
                     return true;
                 }
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Gets the first entry in the XModel XAsset Pool of Infinite Warfare.
+        /// </summary>
+        /// <param name="instance"></param>
+        /// <returns>Name of the XModel.</returns>
+        public string GetFirstXModel(JekyllInstance instance)
+        {
+            long address = DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * (int)XAssetType.xmodel);
+            long pool = instance.Reader.ReadInt64(address) + Marshal.SizeOf<DBAssetPool>();
+            long name = instance.Reader.ReadInt64(pool);
+
+            return instance.Reader.ReadNullTerminatedString(name);
         }
 
         /// <summary>

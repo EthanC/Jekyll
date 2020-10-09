@@ -11,19 +11,19 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "TrueType Font";
 
-            public override int Index => (int)XAssetPool.ttf;
+            public override int Index => (int)XAssetType.ttf;
 
-            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
 
             /// <summary>
-            /// Structure of a Modern Warfare TTF XAsset.
+            /// Structure of a Modern Warfare TTFDef.
             /// </summary>
-            private struct TTFXAsset
+            private struct TTFDef
             {
-                public long NamePointer { get; set; }
-                public int Size { get; set; }
-                public long DataPointer { get; set; }
-                public int NullPadding { get; set; }
+                public long Name { get; set; }
+                public int FileLen { get; set; }
+                public long File { get; set; }
+                public int FtFace { get; set; }
             }
 
             /// <summary>
@@ -35,28 +35,28 @@ namespace JekyllLibrary.Library
             {
                 List<GameXAsset> results = new List<GameXAsset>();
 
-                XAssetPoolData poolInfo = instance.Reader.ReadStruct<XAssetPoolData>(instance.Game.BaseAddress + instance.Game.XAssetPoolsAddress + (Index * Marshal.SizeOf<XAssetPoolData>()));
+                DBAssetPool pool = instance.Reader.ReadStruct<DBAssetPool>(instance.Game.BaseAddress + instance.Game.DBAssetPools + (Index * Marshal.SizeOf<DBAssetPool>()));
 
-                StartAddress = poolInfo.PoolPointer;
-                XAssetSize = poolInfo.XAssetSize;
-                XAssetCount = poolInfo.PoolSize;
+                Entries = pool.Entries;
+                ElementSize = pool.ElementSize;
+                PoolSize = pool.PoolSize;
 
-                for (int i = 0; i < XAssetCount; i++)
+                for (int i = 0; i < PoolSize; i++)
                 {
-                    TTFXAsset header = instance.Reader.ReadStruct<TTFXAsset>(StartAddress + (i * XAssetSize));
+                    TTFDef header = instance.Reader.ReadStruct<TTFDef>(Entries + (i * ElementSize));
 
-                    if (IsNullXAsset(header.NamePointer))
+                    if (IsNullXAsset(header.Name))
                     {
                         continue;
                     }
 
                     results.Add(new GameXAsset()
                     {
-                        Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
+                        Name = instance.Reader.ReadNullTerminatedString(header.Name),
                         Type = Name,
-                        Size = XAssetSize,
+                        Size = ElementSize,
                         XAssetPool = this,
-                        HeaderAddress = StartAddress + (i * XAssetSize),
+                        HeaderAddress = Entries + (i * ElementSize),
                     });
                 }
 
@@ -71,9 +71,9 @@ namespace JekyllLibrary.Library
             /// <returns>Status of the export operation.</returns>
             public override JekyllStatus Export(GameXAsset xasset, JekyllInstance instance)
             {
-                TTFXAsset header = instance.Reader.ReadStruct<TTFXAsset>(xasset.HeaderAddress);
+                TTFDef header = instance.Reader.ReadStruct<TTFDef>(xasset.HeaderAddress);
 
-                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.Name))
                 {
                     return JekyllStatus.MemoryChanged;
                 }
@@ -81,7 +81,7 @@ namespace JekyllLibrary.Library
                 string path = Path.Combine(instance.ExportPath, xasset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                byte[] buffer = instance.Reader.ReadBytes(header.DataPointer, header.Size);
+                byte[] buffer = instance.Reader.ReadBytes(header.File, header.FileLen);
 
                 File.WriteAllBytes(path, buffer);
 

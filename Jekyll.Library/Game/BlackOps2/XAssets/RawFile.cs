@@ -11,18 +11,18 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "Raw File";
 
-            public override int Index => (int)XAssetPool.rawfile;
+            public override int Index => (int)XAssetType.rawfile;
 
-            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
 
             /// <summary>
             /// Structure of a Black Ops II RawFile XAsset.
             /// </summary>
             private struct RawFileXAsset
             {
-                public int NamePointer { get; set; }
-                public int Size { get; set; }
-                public int DataPointer { get; set; }
+                public int Name { get; set; }
+                public int Len { get; set; }
+                public int Buffer { get; set; }
             }
 
             /// <summary>
@@ -34,29 +34,29 @@ namespace JekyllLibrary.Library
             {
                 List<GameXAsset> results = new List<GameXAsset>();
 
-                StartAddress = instance.Reader.ReadStruct<int>(instance.Game.XAssetPoolsAddress + (Marshal.SizeOf<XAssetPoolData>() * Index));
-                XAssetSize = instance.Reader.ReadStruct<int>(instance.Game.XAssetPoolSizesAddress + (Marshal.SizeOf<XAssetPoolSizesData>() * Index));
+                Entries = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
+                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
-                for (int i = 0; i < XAssetSize; i++)
+                for (int i = 0; i < PoolSize; i++)
                 {
-                    RawFileXAsset header = instance.Reader.ReadStruct<RawFileXAsset>(StartAddress + Marshal.SizeOf<XAssetPoolData>() + (i * Marshal.SizeOf<RawFileXAsset>()));
+                    RawFileXAsset header = instance.Reader.ReadStruct<RawFileXAsset>(Entries + Marshal.SizeOf<DBAssetPool>() + (i * Marshal.SizeOf<RawFileXAsset>()));
 
-                    if (IsNullXAsset(header.NamePointer))
+                    if (IsNullXAsset(header.Name))
                     {
                         continue;
                     }
-                    else if (header.Size == 0)
+                    else if (header.Len == 0)
                     {
                         continue;
                     }
 
                     results.Add(new GameXAsset()
                     {
-                        Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
+                        Name = instance.Reader.ReadNullTerminatedString(header.Name),
                         Type = Name,
-                        Size = XAssetSize,
+                        Size = ElementSize,
                         XAssetPool = this,
-                        HeaderAddress = StartAddress + Marshal.SizeOf<XAssetPoolData>() + (i * Marshal.SizeOf<RawFileXAsset>()),
+                        HeaderAddress = Entries + Marshal.SizeOf<DBAssetPool>() + (i * Marshal.SizeOf<RawFileXAsset>()),
                     });
                 }
 
@@ -73,7 +73,7 @@ namespace JekyllLibrary.Library
             {
                 RawFileXAsset header = instance.Reader.ReadStruct<RawFileXAsset>(xasset.HeaderAddress);
 
-                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.Name))
                 {
                     return JekyllStatus.MemoryChanged;
                 }
@@ -81,7 +81,7 @@ namespace JekyllLibrary.Library
                 string path = Path.Combine(instance.ExportPath, xasset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                byte[] buffer = instance.Reader.ReadBytes(header.DataPointer, header.Size);
+                byte[] buffer = instance.Reader.ReadBytes(header.Buffer, header.Len);
                 File.WriteAllBytes(path, buffer);
 
                 Console.WriteLine($"Exported {xasset.Type} {xasset.Name}");

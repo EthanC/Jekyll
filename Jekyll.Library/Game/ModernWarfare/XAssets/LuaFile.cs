@@ -9,21 +9,21 @@ namespace JekyllLibrary.Library
     {
         public class LuaFile : IXAssetPool
         {
-            public override string Name => "Lua";
+            public override string Name => "Lua File";
 
-            public override int Index => (int)XAssetPool.luafile;
+            public override int Index => (int)XAssetType.luafile;
 
-            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
 
             /// <summary>
             /// Structure of a Modern Warfare LuaFile XAsset.
             /// </summary>
             private struct LuaFileXAsset
             {
-                public long NamePointer { get; set; }
-                public int Size { get; set; }
-                public int Size2 { get; set; }
-                public long DataPointer { get; set; }
+                public long Name { get; set; }
+                public int Len { get; set; }
+                public int StrippingType { get; set; }
+                public long Buffer { get; set; }
             }
 
             /// <summary>
@@ -35,28 +35,28 @@ namespace JekyllLibrary.Library
             {
                 List<GameXAsset> results = new List<GameXAsset>();
 
-                XAssetPoolData poolInfo = instance.Reader.ReadStruct<XAssetPoolData>(instance.Game.BaseAddress + instance.Game.XAssetPoolsAddress + (Index * Marshal.SizeOf<XAssetPoolData>()));
+                DBAssetPool pool = instance.Reader.ReadStruct<DBAssetPool>(instance.Game.BaseAddress + instance.Game.DBAssetPools + (Index * Marshal.SizeOf<DBAssetPool>()));
 
-                StartAddress = poolInfo.PoolPointer;
-                XAssetSize = poolInfo.XAssetSize;
-                XAssetCount = poolInfo.PoolSize;
+                Entries = pool.Entries;
+                ElementSize = pool.ElementSize;
+                PoolSize = pool.PoolSize;
 
-                for (int i = 0; i < XAssetCount; i++)
+                for (int i = 0; i < PoolSize; i++)
                 {
-                    LuaFileXAsset header = instance.Reader.ReadStruct<LuaFileXAsset>(StartAddress + (i * XAssetSize));
+                    LuaFileXAsset header = instance.Reader.ReadStruct<LuaFileXAsset>(Entries + (i * ElementSize));
 
-                    if (IsNullXAsset(header.NamePointer))
+                    if (IsNullXAsset(header.Name))
                     {
                         continue;
                     }
 
                     results.Add(new GameXAsset()
                     {
-                        Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
+                        Name = instance.Reader.ReadNullTerminatedString(header.Name),
                         Type = Name,
-                        Size = XAssetSize,
+                        Size = ElementSize,
                         XAssetPool = this,
-                        HeaderAddress = StartAddress + (i * XAssetSize),
+                        HeaderAddress = Entries + (i * ElementSize),
                     });
                 }
 
@@ -73,7 +73,7 @@ namespace JekyllLibrary.Library
             {
                 LuaFileXAsset header = instance.Reader.ReadStruct<LuaFileXAsset>(xasset.HeaderAddress);
 
-                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.Name))
                 {
                     return JekyllStatus.MemoryChanged;
                 }
@@ -81,7 +81,7 @@ namespace JekyllLibrary.Library
                 string path = Path.Combine(instance.ExportPath, xasset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                byte[] buffer = instance.Reader.ReadBytes(header.DataPointer, header.Size);
+                byte[] buffer = instance.Reader.ReadBytes(header.Buffer, header.Len);
 
                 File.WriteAllBytes(path, buffer);
 

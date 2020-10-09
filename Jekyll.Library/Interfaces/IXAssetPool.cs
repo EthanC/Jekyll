@@ -17,7 +17,7 @@ namespace JekyllLibrary.Library
         /// <summary>
         /// Gets or sets the start address of the XAsset Pool.
         /// </summary>
-        public long StartAddress { get; set; }
+        public long Entries { get; set; }
 
         /// <summary>
         /// Gets or sets the end address of the XAsset Pool.
@@ -27,12 +27,12 @@ namespace JekyllLibrary.Library
         /// <summary>
         /// Gets or sets the header size of XAssets in the XAsset Pool.
         /// </summary>
-        public int XAssetSize { get; set; }
+        public int ElementSize { get; set; }
 
         /// <summary>
         /// Gets or sets the number of slots in the XAsset Pool.
         /// </summary>
-        public int XAssetCount { get; set; }
+        public int PoolSize { get; set; }
 
         /// <summary>
         /// Loads XAssets from the specified XAsset Pool.
@@ -49,7 +49,7 @@ namespace JekyllLibrary.Library
         /// </summary>
         public bool IsNullXAsset(long nameAddress)
         {
-            return nameAddress >= StartAddress && nameAddress <= XAssetCount * XAssetSize + StartAddress || nameAddress == 0;
+            return nameAddress >= Entries && nameAddress <= PoolSize * ElementSize + Entries || nameAddress == 0;
         }
     }
 }

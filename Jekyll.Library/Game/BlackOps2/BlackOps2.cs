@@ -36,12 +36,12 @@ namespace JekyllLibrary.Library
         /// <summary>
         /// Gets or sets the XAsset Pools address of Black Ops II.
         /// </summary>
-        public long XAssetPoolsAddress { get; set; }
+        public long DBAssetPools { get; set; }
 
         /// <summary>
         /// Gets or sets the XAsset Pool Sizes address of Black Ops II.
         /// </summary>
-        public long XAssetPoolSizesAddress { get; set; }
+        public long DBAssetPoolSizes { get; set; }
 
         /// <summary>
         /// Gets or sets the list of XAsset Pools of Black Ops II.
@@ -51,7 +51,7 @@ namespace JekyllLibrary.Library
         /// <summary>
         /// XAsset Pools of Black Ops II.
         /// </summary>
-        private enum XAssetPool : int
+        private enum XAssetType : int
         {
             xmodelpieces,
             physpreset,
@@ -122,21 +122,21 @@ namespace JekyllLibrary.Library
         /// <summary>
         /// Structure of an Black Ops II XAsset Pool.
         /// </summary>
-        public struct XAssetPoolData
+        public struct DBAssetPool
         {
-            public int PoolEntries { get; set; }
+            public int Entries { get; set; }
         }
 
         /// <summary>
         /// Structure of an Black Ops II XAsset Pool Size.
         /// </summary>
-        public struct XAssetPoolSizesData
+        public struct DBAssetPoolSize
         {
             public int PoolSize { get; set; }
         }
 
         /// <summary>
-        /// Validates and sets the XAsset Pools and XAsset Pool Sizes addresses of Black Ops II.
+        /// Validates and sets the DBAssetPools and DBAssetPoolSizes addresses of Black Ops II.
         /// </summary>
         /// <param name="instance"></param>
         /// <returns>True if addresses are valid, otherwise false.</returns>
@@ -145,25 +145,39 @@ namespace JekyllLibrary.Library
             BaseAddress = instance.Reader.GetBaseAddress();
             long moduleSize = instance.Reader.GetModuleMemorySize();
 
-            long[] scanXAssetPools = instance.Reader.FindBytes(
+            long[] scanDBAssetPools = instance.Reader.FindBytes(
                 new byte?[] { 0x56, 0x51, 0xFF, 0xD2, 0x8B, 0xF0, 0x83, 0xC4, 0x04, 0x85, 0xF6 },
                 BaseAddress,
                 BaseAddress + moduleSize,
                 true);
 
-            if (scanXAssetPools.Length > 0)
+            if (scanDBAssetPools.Length > 0)
             {
-                XAssetPoolsAddress = instance.Reader.ReadInt32(scanXAssetPools[0] - 0xB);
-                XAssetPoolSizesAddress = instance.Reader.ReadInt32(scanXAssetPools[0] + 0x3B);
+                DBAssetPools = instance.Reader.ReadInt32(scanDBAssetPools[0] - 0xB);
+                DBAssetPoolSizes = instance.Reader.ReadInt32(scanDBAssetPools[0] + 0x3B);
 
                 // In Black Ops II, defaultvehicle will always be the first entry in the XModel XAsset Pool.
-                if (instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt32(instance.Reader.ReadInt32(XAssetPoolsAddress + (Marshal.SizeOf<XAssetPoolData>() * (int)XAssetPool.xmodel)) + 4)) == "defaultvehicle")
+                if (GetFirstXModel(instance) == "defaultvehicle")
                 {
                     return true;
                 }
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Gets the first entry in the XModel XAsset Pool of Black Ops II.
+        /// </summary>
+        /// <param name="instance"></param>
+        /// <returns>Name of the XModel.</returns>
+        public string GetFirstXModel(JekyllInstance instance)
+        {
+            long address = DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * (int)XAssetType.xmodel);
+            long pool = instance.Reader.ReadInt32(address) + Marshal.SizeOf<DBAssetPool>();
+            long name = instance.Reader.ReadInt32(pool);
+
+            return instance.Reader.ReadNullTerminatedString(name);
         }
 
         /// <summary>

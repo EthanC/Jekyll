@@ -25,14 +25,14 @@ namespace JekyllLibrary.Library
         long BaseAddress { get; set; }
 
         /// <summary>
-        /// Gets or sets the memory address for the XAsset Pools of the game.
+        /// Gets or sets the memory address for the DBAssetPools of the game.
         /// </summary>
-        long XAssetPoolsAddress { get; set; }
+        long DBAssetPools { get; set; }
 
         /// <summary>
-        /// Gets or sets the memory address for the XAsset Pool Sizes of the game (optional).
+        /// Gets or sets the memory address for the DBAssetPoolSizes of the game (optional).
         /// </summary>
-        long XAssetPoolSizesAddress { get; set; }
+        long DBAssetPoolSizes { get; set; }
 
         /// <summary>
         /// Gets or sets the list of XAsset Pools for the game.
@@ -44,6 +44,12 @@ namespace JekyllLibrary.Library
         /// </summary>
         /// <returns>True if valid addresses are found, otherwise false.</returns>
         bool InitializeGame(JekyllInstance instance);
+
+        /// <summary>
+        /// Gets the first entry in the XModel XAsset Pool of the game.
+        /// </summary>
+        /// <returns>True if valid addresses are found, otherwise false.</returns>
+        string GetFirstXModel(JekyllInstance instance);
 
         /// <summary>
         /// Creates a shallow copy of the IGame object.

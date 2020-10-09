@@ -11,17 +11,18 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "Map Entities";
 
-            public override int Index => (int)XAssetPool.map_ents;
+            public override int Index => (int)XAssetType.map_ents;
 
-            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
 
             /// <summary>
             /// Structure of a Modern Warfare MapEnts XAsset.
             /// </summary>
             private struct MapEntsXAsset
             {
-                public long NamePointer { get; set; }
-                public long DataPointer { get; set; }
+                public long Name { get; set; }
+                public long EntityString { get; set; }
+                // TODO: Fill remaining unknown.
             }
 
             /// <summary>
@@ -33,28 +34,28 @@ namespace JekyllLibrary.Library
             {
                 List<GameXAsset> results = new List<GameXAsset>();
 
-                XAssetPoolData poolInfo = instance.Reader.ReadStruct<XAssetPoolData>(instance.Game.BaseAddress + instance.Game.XAssetPoolsAddress + (Index * Marshal.SizeOf<XAssetPoolData>()));
+                DBAssetPool poolInfo = instance.Reader.ReadStruct<DBAssetPool>(instance.Game.BaseAddress + instance.Game.DBAssetPools + (Index * Marshal.SizeOf<DBAssetPool>()));
 
-                StartAddress = poolInfo.PoolPointer;
-                XAssetSize = poolInfo.XAssetSize;
-                XAssetCount = poolInfo.PoolSize;
+                Entries = poolInfo.Entries;
+                ElementSize = poolInfo.ElementSize;
+                PoolSize = poolInfo.PoolSize;
 
-                for (int i = 0; i < XAssetCount; i++)
+                for (int i = 0; i < PoolSize; i++)
                 {
-                    MapEntsXAsset header = instance.Reader.ReadStruct<MapEntsXAsset>(StartAddress + (i * XAssetSize));
+                    MapEntsXAsset header = instance.Reader.ReadStruct<MapEntsXAsset>(Entries + (i * ElementSize));
 
-                    if (IsNullXAsset(header.NamePointer))
+                    if (IsNullXAsset(header.Name))
                     {
                         continue;
                     }
 
                     results.Add(new GameXAsset()
                     {
-                        Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
+                        Name = instance.Reader.ReadNullTerminatedString(header.Name),
                         Type = Name,
-                        Size = XAssetSize,
+                        Size = ElementSize,
                         XAssetPool = this,
-                        HeaderAddress = StartAddress + (i * XAssetSize),
+                        HeaderAddress = Entries + (i * ElementSize),
                     });
                 }
 
@@ -71,7 +72,7 @@ namespace JekyllLibrary.Library
             {
                 MapEntsXAsset header = instance.Reader.ReadStruct<MapEntsXAsset>(xasset.HeaderAddress);
 
-                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.Name))
                 {
                     return JekyllStatus.MemoryChanged;
                 }
@@ -79,7 +80,7 @@ namespace JekyllLibrary.Library
                 string path = Path.Combine(instance.ExportPath, xasset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                File.WriteAllText(path, instance.Reader.ReadNullTerminatedString(header.DataPointer));
+                File.WriteAllText(path, instance.Reader.ReadNullTerminatedString(header.EntityString));
 
                 Console.WriteLine($"Exported {xasset.Type} {xasset.Name}");
 

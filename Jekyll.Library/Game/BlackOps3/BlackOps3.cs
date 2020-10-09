@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace JekyllLibrary.Library
@@ -35,12 +34,12 @@ namespace JekyllLibrary.Library
         /// <summary>
         /// Gets or sets the XAsset Pools address of Black Ops III.
         /// </summary>
-        public long XAssetPoolsAddress { get; set; }
+        public long DBAssetPools { get; set; }
 
         /// <summary>
         /// Gets or sets the XAsset Pool Sizes address of Black Ops III (unused, stored in pool data.)
         /// </summary>
-        public long XAssetPoolSizesAddress { get; set; }
+        public long DBAssetPoolSizes { get; set; }
 
         /// <summary>
         /// Gets or sets the list of XAsset Pools of Black Ops III.
@@ -50,7 +49,7 @@ namespace JekyllLibrary.Library
         /// <summary>
         /// XAsset Pools of Black Ops III.
         /// </summary>
-        private enum XAssetPool : int
+        private enum XAssetType : int
         {
             physpreset,
             physconstraints,
@@ -164,14 +163,14 @@ namespace JekyllLibrary.Library
         /// <summary>
         /// Structure of a Black Ops III XAsset Pool.
         /// </summary>
-        public struct XAssetPoolData
+        public struct DBAssetPool
         {
-            public long PoolPointer { get; set; }
-            public int XAssetSize { get; set; }
+            public long Entries { get; set; }
+            public int ElementSize { get; set; }
             public int PoolSize { get; set; }
             public int NullPadding { get; set; }
-            public int XAssetCount { get; set; }
-            public long FreeHeaderPointer { get; set; }
+            public int UsedCount { get; set; }
+            public long FreeHead { get; set; }
         }
 
         /// <summary>
@@ -183,24 +182,38 @@ namespace JekyllLibrary.Library
         {
             BaseAddress = instance.Reader.GetBaseAddress();
 
-            var scanXAssetPools = instance.Reader.FindBytes(
+            var scanDBAssetPools = instance.Reader.FindBytes(
                 new byte?[] { 0x63, 0xC1, 0x48, 0x8D, 0x05, null, null, null, null, 0x49, 0xC1, 0xE0, null, 0x4C, 0x03, 0xC0 },
                 BaseAddress,
                 BaseAddress + instance.Reader.GetModuleMemorySize(),
                 true);
 
-            if (scanXAssetPools.Length > 0)
+            if (scanDBAssetPools.Length > 0)
             {
-                XAssetPoolsAddress = instance.Reader.ReadInt32(scanXAssetPools[0] + 0x5) + (scanXAssetPools[0] + 0x9);
+                DBAssetPools = instance.Reader.ReadInt32(scanDBAssetPools[0] + 0x5) + (scanDBAssetPools[0] + 0x9);
 
                 // In Black Ops III, void will always be the first entry in the XModel XAsset Pool.
-                if (instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadStruct<XAssetPoolData>(XAssetPoolsAddress + (Marshal.SizeOf<XAssetPoolData>() * (int)XAssetPool.xmodel)).PoolPointer)) == "void")
+                if (GetFirstXModel(instance) == "void")
                 {
                     return true;
                 }
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Gets the first entry in the XModel XAsset Pool of Black Ops III.
+        /// </summary>
+        /// <param name="instance"></param>
+        /// <returns>Name of the XModel.</returns>
+        public string GetFirstXModel(JekyllInstance instance)
+        {
+            long address = DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * (int)XAssetType.xmodel);
+            DBAssetPool pool = instance.Reader.ReadStruct<DBAssetPool>(address);
+            long name = instance.Reader.ReadInt64(pool.Entries);
+
+            return instance.Reader.ReadNullTerminatedString(name);
         }
 
         /// <summary>

@@ -10,19 +10,19 @@ namespace JekyllLibrary.Library
     {
         public class Localize : IXAssetPool
         {
-            public override string Name => "Localize";
+            public override string Name => "Localize Entry";
 
-            public override int Index => (int)XAssetPool.localize;
+            public override int Index => (int)XAssetType.localize;
 
-            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
 
             /// <summary>
-            /// Structure of an Ghosts Localize XAsset.
+            /// Structure of an Ghosts LocalizeEntry.
             /// </summary>
-            private struct LocalizeXAsset
+            private struct LocalizeEntry
             {
-                public long StringPointer { get; set; }
-                public long NamePointer { get; set; }
+                public long Value { get; set; }
+                public long Name { get; set; }
             }
 
             /// <summary>
@@ -32,30 +32,30 @@ namespace JekyllLibrary.Library
             /// <returns>List of Localize XAsset objects.</returns>
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
-                StartAddress = instance.Reader.ReadStruct<long>(instance.Game.XAssetPoolsAddress + (Marshal.SizeOf<XAssetPoolData>() * Index));
-                XAssetSize = instance.Reader.ReadStruct<int>(instance.Game.XAssetPoolSizesAddress + (Marshal.SizeOf<XAssetPoolSizesData>() * Index));
+                Entries = instance.Reader.ReadStruct<long>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
+                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
                 Dictionary<string, string> entries = new Dictionary<string, string>();
 
-                for (int i = 0; i < XAssetSize; i++)
+                for (int i = 0; i < PoolSize; i++)
                 {
-                    LocalizeXAsset header = instance.Reader.ReadStruct<LocalizeXAsset>(StartAddress + Marshal.SizeOf<XAssetPoolData>() + (i * Marshal.SizeOf<LocalizeXAsset>()));
+                    LocalizeEntry header = instance.Reader.ReadStruct<LocalizeEntry>(Entries + Marshal.SizeOf<DBAssetPool>() + (i * Marshal.SizeOf<LocalizeEntry>()));
 
-                    if (IsNullXAsset(header.NamePointer))
+                    if (IsNullXAsset(header.Name))
                     {
                         continue;
                     }
 
-                    string key = instance.Reader.ReadNullTerminatedString(header.NamePointer).ToUpper();
+                    string key = instance.Reader.ReadNullTerminatedString(header.Name).ToUpper();
 
                     if (entries.TryGetValue(key, out string _))
                     {
                         continue;
                     }
 
-                    entries.Add(key, instance.Reader.ReadNullTerminatedString(header.StringPointer));
+                    entries.Add(key, instance.Reader.ReadNullTerminatedString(header.Value));
 
-                    Console.WriteLine($"Exported Localize {key}");
+                    Console.WriteLine($"Exported {Name} {key}");
                 }
 
                 string path = Path.Combine(instance.ExportPath, "localize.json");

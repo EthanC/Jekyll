@@ -12,27 +12,27 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "String Table";
 
-            public override int Index => (int)XAssetPool.stringtable;
+            public override int Index => (int)XAssetType.stringtable;
 
-            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
 
             /// <summary>
             /// Structure of a Modern Warfare Remastered StringTable XAsset.
             /// </summary>
             private struct StringTableXAsset
             {
-                public long NamePointer { get; set; }
+                public long Name { get; set; }
                 public int ColumnCount { get; set; }
                 public int RowCount { get; set; }
-                public long DataPointer { get; set; }
+                public long Strings { get; set; }
             }
 
             /// <summary>
-            /// Structure of a Modern Warfare Remastered StringTable XAsset's data.
+            /// Structure of a Modern Warfare Remastered StringTable String.
             /// </summary>
-            private struct StringTableData
+            private struct StringTableString
             {
-                public long StringPointer { get; set; }
+                public long Value { get; set; }
                 public int Hash { get; set; }
                 public int NullPadding { get; set; }
             }
@@ -46,29 +46,29 @@ namespace JekyllLibrary.Library
             {
                 List<GameXAsset> results = new List<GameXAsset>();
 
-                StartAddress = instance.Reader.ReadStruct<long>(instance.Game.XAssetPoolsAddress + (Marshal.SizeOf<XAssetPoolData>() * Index));
-                XAssetSize = instance.Reader.ReadStruct<int>(instance.Game.XAssetPoolSizesAddress + (Marshal.SizeOf<XAssetPoolSizesData>() * Index));
+                Entries = instance.Reader.ReadStruct<long>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
+                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
-                for (int i = 0; i < XAssetSize; i++)
+                for (int i = 0; i < PoolSize; i++)
                 {
-                    StringTableXAsset header = instance.Reader.ReadStruct<StringTableXAsset>(StartAddress + Marshal.SizeOf<XAssetPoolData>() + (i * Marshal.SizeOf<StringTableXAsset>()));
+                    StringTableXAsset header = instance.Reader.ReadStruct<StringTableXAsset>(Entries + Marshal.SizeOf<DBAssetPool>() + (i * Marshal.SizeOf<StringTableXAsset>()));
 
-                    if (IsNullXAsset(header.NamePointer))
+                    if (IsNullXAsset(header.Name))
                     {
                         continue;
                     }
-                    else if (instance.Reader.ReadNullTerminatedString(header.NamePointer).EndsWith(".csv") is false)
+                    else if (instance.Reader.ReadNullTerminatedString(header.Name).EndsWith(".csv") is false)
                     {
                         continue;
                     }
 
                     results.Add(new GameXAsset()
                     {
-                        Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
+                        Name = instance.Reader.ReadNullTerminatedString(header.Name),
                         Type = Name,
-                        Size = XAssetSize,
+                        Size = ElementSize,
                         XAssetPool = this,
-                        HeaderAddress = StartAddress + Marshal.SizeOf<XAssetPoolData>() + (i * Marshal.SizeOf<StringTableXAsset>()),
+                        HeaderAddress = Entries + Marshal.SizeOf<DBAssetPool>() + (i * Marshal.SizeOf<StringTableXAsset>()),
                     });
                 }
 
@@ -85,7 +85,7 @@ namespace JekyllLibrary.Library
             {
                 StringTableXAsset header = instance.Reader.ReadStruct<StringTableXAsset>(xasset.HeaderAddress);
 
-                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.Name))
                 {
                     return JekyllStatus.MemoryChanged;
                 }
@@ -99,12 +99,12 @@ namespace JekyllLibrary.Library
                 {
                     for (int y = 0; y < header.ColumnCount; y++)
                     {
-                        StringTableData data = instance.Reader.ReadStruct<StringTableData>(header.DataPointer);
-                        string cell = instance.Reader.ReadNullTerminatedString(data.StringPointer);
+                        StringTableString data = instance.Reader.ReadStruct<StringTableString>(header.Strings);
+                        string cell = instance.Reader.ReadNullTerminatedString(data.Value);
 
                         stringTable.Append($"{cell},");
 
-                        header.DataPointer += Marshal.SizeOf<StringTableData>();
+                        header.Strings += Marshal.SizeOf<StringTableString>();
                     }
 
                     stringTable.AppendLine();

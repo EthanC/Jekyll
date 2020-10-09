@@ -122,7 +122,7 @@ namespace JekyllLibrary.Library
                             if (Game.InitializeGame(this))
                             {
                                 Console.ForegroundColor = ConsoleColor.Green;
-                                Console.WriteLine($"Loaded Call of Duty: {Game.Name} (0x{Game.XAssetPoolsAddress})");
+                                Console.WriteLine($"Loaded Call of Duty: {Game.Name} ({Game.DBAssetPools})");
                                 Console.ResetColor();
 
                                 Game.XAssetPools = GetXAssetPools(Game);

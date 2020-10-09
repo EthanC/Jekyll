@@ -11,17 +11,18 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "Map Entities";
 
-            public override int Index => (int)XAssetPool.map_ents;
+            public override int Index => (int)XAssetType.map_ents;
 
-            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
 
             /// <summary>
             /// Structure of an Advanced Warfare MapEnts XAsset.
             /// </summary>
             private struct MapEntsXAsset
             {
-                public long NamePointer { get; set; }
-                public long DataPointer { get; set; }
+                public long Name { get; set; }
+                public long EntityString { get; set; }
+                // TODO: Fill remaining unknown.
             }
 
             /// <summary>
@@ -33,29 +34,29 @@ namespace JekyllLibrary.Library
             {
                 List<GameXAsset> results = new List<GameXAsset>();
 
-                StartAddress = instance.Reader.ReadStruct<long>(instance.Game.XAssetPoolsAddress + (Marshal.SizeOf<XAssetPoolData>() * Index));
-                XAssetSize = instance.Reader.ReadStruct<int>(instance.Game.XAssetPoolSizesAddress + (Marshal.SizeOf<XAssetPoolSizesData>() * Index));
+                Entries = instance.Reader.ReadStruct<long>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
+                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
-                for (int i = 0; i < XAssetSize; i++)
+                for (int i = 0; i < PoolSize; i++)
                 {
-                    MapEntsXAsset header = instance.Reader.ReadStruct<MapEntsXAsset>(StartAddress + Marshal.SizeOf<XAssetPoolData>() + (i * Marshal.SizeOf<MapEntsXAsset>()));
+                    MapEntsXAsset header = instance.Reader.ReadStruct<MapEntsXAsset>(Entries + Marshal.SizeOf<DBAssetPool>() + (i * Marshal.SizeOf<MapEntsXAsset>()));
 
-                    if (IsNullXAsset(header.NamePointer))
+                    if (IsNullXAsset(header.Name))
                     {
                         continue;
                     }
-                    else if (instance.Reader.ReadNullTerminatedString(header.NamePointer).EndsWith(".d3dbsp") is false)
+                    else if (instance.Reader.ReadNullTerminatedString(header.Name).EndsWith(".d3dbsp") is false)
                     {
                         continue;
                     }
 
                     results.Add(new GameXAsset()
                     {
-                        Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
+                        Name = instance.Reader.ReadNullTerminatedString(header.Name),
                         Type = Name,
-                        Size = XAssetSize,
+                        Size = ElementSize,
                         XAssetPool = this,
-                        HeaderAddress = StartAddress + Marshal.SizeOf<XAssetPoolData>() + (i * Marshal.SizeOf<MapEntsXAsset>()),
+                        HeaderAddress = Entries + Marshal.SizeOf<DBAssetPool>() + (i * Marshal.SizeOf<MapEntsXAsset>()),
                     });
                 }
 
@@ -72,7 +73,7 @@ namespace JekyllLibrary.Library
             {
                 MapEntsXAsset header = instance.Reader.ReadStruct<MapEntsXAsset>(xasset.HeaderAddress);
 
-                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.Name))
                 {
                     return JekyllStatus.MemoryChanged;
                 }
@@ -80,7 +81,7 @@ namespace JekyllLibrary.Library
                 string path = Path.Combine(instance.ExportPath, xasset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                File.WriteAllText(path, instance.Reader.ReadNullTerminatedString(header.DataPointer));
+                File.WriteAllText(path, instance.Reader.ReadNullTerminatedString(header.EntityString));
 
                 Console.WriteLine($"Exported {xasset.Type} {xasset.Name}");
 

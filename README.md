@@ -21,7 +21,6 @@ Run a supported Call of Duty title, then run `Jekyll.UI.exe` and allow the progr
 -   Map Entities
 -   Raw Files
 -   Script Files\*
--   Sound Globals
 -   String Tables
 -   TrueType Fonts
 

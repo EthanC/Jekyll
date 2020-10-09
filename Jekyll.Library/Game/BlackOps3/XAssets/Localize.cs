@@ -10,19 +10,19 @@ namespace JekyllLibrary.Library
     {
         public class Localize : IXAssetPool
         {
-            public override string Name => "Localize";
+            public override string Name => "Localize Entry";
 
-            public override int Index => (int)XAssetPool.localize;
+            public override int Index => (int)XAssetType.localize;
 
-            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
 
             /// <summary>
             /// Structure of a Black Ops III Localize XAsset.
             /// </summary>
-            private struct LocalizeXAsset
+            private struct LocalizeEntry
             {
-                public long StringPointer { get; set; }
-                public long NamePointer { get; set; }
+                public long Value { get; set; }
+                public long Name { get; set; }
             }
 
             /// <summary>
@@ -32,31 +32,31 @@ namespace JekyllLibrary.Library
             /// <returns>List of Localize XAsset objects.</returns>
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
-                XAssetPoolData poolInfo = instance.Reader.ReadStruct<XAssetPoolData>(instance.Game.XAssetPoolsAddress + (Index * Marshal.SizeOf<XAssetPoolData>()));
+                DBAssetPool pool = instance.Reader.ReadStruct<DBAssetPool>(instance.Game.DBAssetPools + (Index * Marshal.SizeOf<DBAssetPool>()));
 
-                StartAddress = poolInfo.PoolPointer;
-                XAssetSize = poolInfo.XAssetSize;
-                XAssetCount = poolInfo.PoolSize;
+                Entries = pool.Entries;
+                ElementSize = pool.ElementSize;
+                PoolSize = pool.PoolSize;
 
                 Dictionary<string, string> entries = new Dictionary<string, string>();
 
-                for (int i = 0; i < XAssetCount; i++)
+                for (int i = 0; i < PoolSize; i++)
                 {
-                    LocalizeXAsset header = instance.Reader.ReadStruct<LocalizeXAsset>(StartAddress + (i * XAssetSize));
+                    LocalizeEntry header = instance.Reader.ReadStruct<LocalizeEntry>(Entries + (i * ElementSize));
 
-                    if (IsNullXAsset(header.NamePointer))
+                    if (IsNullXAsset(header.Name))
                     {
                         continue;
                     }
 
-                    string key = instance.Reader.ReadNullTerminatedString(header.NamePointer).ToUpper();
+                    string key = instance.Reader.ReadNullTerminatedString(header.Name).ToUpper();
 
                     if (entries.TryGetValue(key, out string _))
                     {
                         continue;
                     }
 
-                    string value = instance.Reader.ReadNullTerminatedString(header.StringPointer);
+                    string value = instance.Reader.ReadNullTerminatedString(header.Value);
                     entries.Add(key, value);
 
                     Console.WriteLine($"Exported {Name} {key}");

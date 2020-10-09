@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace JekyllLibrary.Library
@@ -35,12 +36,12 @@ namespace JekyllLibrary.Library
         /// <summary>
         /// Gets or sets the XAsset Pools address of WWII.
         /// </summary>
-        public long XAssetPoolsAddress { get; set; }
+        public long DBAssetPools { get; set; }
 
         /// <summary>
         /// Gets or sets the XAsset Pool Sizes address of WWII.
         /// </summary>
-        public long XAssetPoolSizesAddress { get; set; }
+        public long DBAssetPoolSizes { get; set; }
 
         /// <summary>
         /// Gets or sets the list of XAsset Pools of WWII.
@@ -50,7 +51,7 @@ namespace JekyllLibrary.Library
         /// <summary>
         /// XAsset Pools of WWII.
         /// </summary>
-        private enum XAssetPool : int
+        private enum XAssetType : int
         {
             physpreset,
             sndphyspreset,
@@ -140,22 +141,22 @@ namespace JekyllLibrary.Library
         /// <summary>
         /// Structure of a WWII XAsset Pool.
         /// </summary>
-        public struct XAssetPoolData
+        public struct DBAssetPool
         {
-            public int FreeHeaderPointer { get; set; }
-            public int PoolEntries { get; set; }
+            public int FreeHead { get; set; }
+            public int Entries { get; set; }
         }
 
         /// <summary>
         /// Structure of a WWII XAsset Pool Size.
         /// </summary>
-        public struct XAssetPoolSizesData
+        public struct DBAssetPoolSize
         {
             public int PoolSize { get; set; }
         }
 
         /// <summary>
-        /// Validates and sets the XAsset Pools and XAsset Pool Sizes addresses of WWII.
+        /// Validates and sets the DBAssetPools and DBAssetPoolSizes addresses of WWII.
         /// </summary>
         /// <param name="instance"></param>
         /// <returns>True if addresses are valid, otherwise false.</returns>
@@ -164,30 +165,44 @@ namespace JekyllLibrary.Library
             BaseAddress = instance.Reader.GetBaseAddress();
             long moduleSize = instance.Reader.GetModuleMemorySize();
 
-            var scanXAssetPools = instance.Reader.FindBytes(
+            var scanDBAssetPools = instance.Reader.FindBytes(
                 new byte?[] { 0x4A, 0x8B, 0xAC, null, null, null, null, null, 0x48, 0x85, 0xED },
                 BaseAddress,
                 BaseAddress + moduleSize,
                 true);
-            var scanXAssetPoolSizes = instance.Reader.FindBytes(
+            var scanDBAssetPoolSizes = instance.Reader.FindBytes(
                 new byte?[] { 0x83, 0xBC, null, null, null, null, null, 0x01, 0x7F, 0x48 },
                 BaseAddress,
                 BaseAddress + moduleSize,
                 true);
             
-            if (scanXAssetPools.Length > 0 && scanXAssetPoolSizes.Length > 0)
+            if (scanDBAssetPools.Length > 0 && scanDBAssetPoolSizes.Length > 0)
             {
-                XAssetPoolsAddress = instance.Reader.ReadInt32(scanXAssetPools[0] + Marshal.SizeOf<XAssetPoolSizesData>()) + BaseAddress;
-                XAssetPoolSizesAddress = instance.Reader.ReadInt32(scanXAssetPoolSizes[0] + (Marshal.SizeOf<XAssetPoolSizesData>() - 1)) + BaseAddress;
+                DBAssetPools = instance.Reader.ReadInt32(scanDBAssetPools[0] + Marshal.SizeOf<DBAssetPoolSize>()) + BaseAddress;
+                DBAssetPoolSizes = instance.Reader.ReadInt32(scanDBAssetPoolSizes[0] + (Marshal.SizeOf<DBAssetPool>() - 1)) + BaseAddress;
 
                 // In WWII, empty_model will always be the first entry in the XModel XAsset Pool.
-                if (instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadInt64(XAssetPoolsAddress + (Marshal.SizeOf<XAssetPoolData>() * (int)XAssetPool.xmodel)) + Marshal.SizeOf<XAssetPoolData>())) == "empty_model")
+                if (GetFirstXModel(instance) == "empty_model")
                 {
                     return true;
                 }
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Gets the first entry in the XModel XAsset Pool of WWII.
+        /// </summary>
+        /// <param name="instance"></param>
+        /// <returns>Name of the XModel.</returns>
+        public string GetFirstXModel(JekyllInstance instance)
+        {
+            long address = DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * (int)XAssetType.xmodel);
+            long pool = instance.Reader.ReadInt64(address) + Marshal.SizeOf<DBAssetPool>();
+            long name = instance.Reader.ReadInt64(pool);
+
+            return instance.Reader.ReadNullTerminatedString(name);
         }
 
         /// <summary>

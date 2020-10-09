@@ -10,23 +10,23 @@ namespace JekyllLibrary.Library
     {
         public class ScriptFile : IXAssetPool
         {
-            public override string Name => "Script";
+            public override string Name => "Script File";
 
-            public override int Index => (int)XAssetPool.scriptfile;
+            public override int Index => (int)XAssetType.scriptfile;
 
-            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
 
             /// <summary>
             /// Structure of an Ghosts ScriptFile XAsset.
             /// </summary>
             private struct ScriptFileXAsset
             {
-                public long NamePointer { get; set; }
-                public int CompressedSize { get; set; }
-                public int Size { get; set; }
-                public int ByteCodeSize { get; set; }
-                public long DataPointer { get; set; }
-                public long ByteCodePointer { get; set; }
+                public long Name { get; set; }
+                public int CompressedLen { get; set; }
+                public int Len { get; set; }
+                public int BytecodeLen { get; set; }
+                public long Buffer { get; set; }
+                public long Bytecode { get; set; }
             }
 
             /// <summary>
@@ -38,29 +38,29 @@ namespace JekyllLibrary.Library
             {
                 List<GameXAsset> results = new List<GameXAsset>();
 
-                StartAddress = instance.Reader.ReadStruct<long>(instance.Game.XAssetPoolsAddress + (Marshal.SizeOf<XAssetPoolData>() * Index));
-                XAssetSize = instance.Reader.ReadStruct<int>(instance.Game.XAssetPoolSizesAddress + (Marshal.SizeOf<XAssetPoolSizesData>() * Index));
+                Entries = instance.Reader.ReadStruct<long>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
+                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
-                for (int i = 0; i < XAssetSize; i++)
+                for (int i = 0; i < PoolSize; i++)
                 {
-                    ScriptFileXAsset header = instance.Reader.ReadStruct<ScriptFileXAsset>(StartAddress + Marshal.SizeOf<XAssetPoolData>() + (i * Marshal.SizeOf<ScriptFileXAsset>()));
+                    ScriptFileXAsset header = instance.Reader.ReadStruct<ScriptFileXAsset>(Entries + Marshal.SizeOf<DBAssetPool>() + (i * Marshal.SizeOf<ScriptFileXAsset>()));
 
-                    if (IsNullXAsset(header.NamePointer))
+                    if (IsNullXAsset(header.Name))
                     {
                         continue;
                     }
-                    else if (header.DataPointer == 0)
+                    else if (header.Len == 0)
                     {
                         continue;
                     }
 
                     results.Add(new GameXAsset()
                     {
-                        Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
+                        Name = instance.Reader.ReadNullTerminatedString(header.Name),
                         Type = Name,
-                        Size = XAssetSize,
+                        Size = ElementSize,
                         XAssetPool = this,
-                        HeaderAddress = StartAddress + Marshal.SizeOf<XAssetPoolData>() + (i * Marshal.SizeOf<ScriptFileXAsset>()),
+                        HeaderAddress = Entries + Marshal.SizeOf<DBAssetPool>() + (i * Marshal.SizeOf<ScriptFileXAsset>()),
                     });
                 }
 
@@ -77,7 +77,7 @@ namespace JekyllLibrary.Library
             {
                 ScriptFileXAsset header = instance.Reader.ReadStruct<ScriptFileXAsset>(xasset.HeaderAddress);
 
-                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.Name))
                 {
                     return JekyllStatus.MemoryChanged;
                 }
@@ -86,7 +86,7 @@ namespace JekyllLibrary.Library
                 string path = Path.Combine(instance.ExportPath, addedScriptsFolder.Contains(".gsc") ? "" : addedScriptsFolder + ".gsc");
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                MemoryStream DecodedCodeStream = Decode(instance.Reader.ReadBytes(header.DataPointer + 2, header.CompressedSize - 2));
+                MemoryStream DecodedCodeStream = Decode(instance.Reader.ReadBytes(header.Buffer + 2, header.CompressedLen - 2));
 
                 try
                 {

@@ -11,18 +11,18 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "Raw File";
 
-            public override int Index => (int)XAssetPool.rawfile;
+            public override int Index => (int)XAssetType.rawfile;
 
-            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
 
             /// <summary>
             /// Structure of a Black Ops III RawFile XAsset.
             /// </summary>
             private struct RawFileXAsset
             {
-                public long NamePointer { get; set; }
-                public int Size { get; set; }
-                public long DataPointer { get; set; }
+                public long Name { get; set; }
+                public int Len { get; set; }
+                public long Buffer { get; set; }
             }
 
             /// <summary>
@@ -34,32 +34,32 @@ namespace JekyllLibrary.Library
             {
                 List<GameXAsset> results = new List<GameXAsset>();
 
-                XAssetPoolData poolInfo = instance.Reader.ReadStruct<XAssetPoolData>(instance.Game.XAssetPoolsAddress + (Index * Marshal.SizeOf<XAssetPoolData>()));
+                DBAssetPool pool = instance.Reader.ReadStruct<DBAssetPool>(instance.Game.DBAssetPools + (Index * Marshal.SizeOf<DBAssetPool>()));
 
-                StartAddress = poolInfo.PoolPointer;
-                XAssetSize = poolInfo.XAssetSize;
-                XAssetCount = poolInfo.PoolSize;
+                Entries = pool.Entries;
+                ElementSize = pool.ElementSize;
+                PoolSize = pool.PoolSize;
 
-                for (int i = 0; i < XAssetCount; i++)
+                for (int i = 0; i < PoolSize; i++)
                 {
-                    RawFileXAsset header = instance.Reader.ReadStruct<RawFileXAsset>(StartAddress + (i * XAssetSize));
+                    RawFileXAsset header = instance.Reader.ReadStruct<RawFileXAsset>(Entries + (i * ElementSize));
 
-                    if (IsNullXAsset(header.NamePointer))
+                    if (IsNullXAsset(header.Name))
                     {
                         continue;
                     }
-                    else if (header.Size == 0)
+                    else if (header.Len == 0)
                     {
                         continue;
                     }
 
                     results.Add(new GameXAsset()
                     {
-                        Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
+                        Name = instance.Reader.ReadNullTerminatedString(header.Name),
                         Type = Name,
-                        Size = XAssetSize,
+                        Size = ElementSize,
                         XAssetPool = this,
-                        HeaderAddress = StartAddress + (i * XAssetSize),
+                        HeaderAddress = Entries + (i * ElementSize),
                     });
                 }
 
@@ -76,7 +76,7 @@ namespace JekyllLibrary.Library
             {
                 RawFileXAsset header = instance.Reader.ReadStruct<RawFileXAsset>(xasset.HeaderAddress);
 
-                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.Name))
                 {
                     return JekyllStatus.MemoryChanged;
                 }
@@ -84,7 +84,7 @@ namespace JekyllLibrary.Library
                 string path = Path.Combine(instance.ExportPath, xasset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                byte[] buffer = instance.Reader.ReadBytes(header.DataPointer, header.Size);
+                byte[] buffer = instance.Reader.ReadBytes(header.Buffer, header.Len);
 
                 File.WriteAllBytes(path, buffer);
 

@@ -9,21 +9,21 @@ namespace JekyllLibrary.Library
     {
         public class LuaFile : IXAssetPool
         {
-            public override string Name => "Lua";
+            public override string Name => "Lua File";
 
-            public override int Index => (int)XAssetPool.luafile;
+            public override int Index => (int)XAssetType.luafile;
 
-            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
 
             /// <summary>
             /// Structure of an Infinite Warfare LuaFile XAsset.
             /// </summary>
             private struct LuaFileXAsset
             {
-                public long NamePointer { get; set; }
-                public int Size { get; set; }
-                public int Size2 { get; set; }
-                public long DataPointer { get; set; }
+                public long Name { get; set; }
+                public int Len { get; set; }
+                public int StrippingType { get; set; }
+                public long Buffer { get; set; }
             }
 
             /// <summary>
@@ -35,29 +35,29 @@ namespace JekyllLibrary.Library
             {
                 List<GameXAsset> results = new List<GameXAsset>();
 
-                StartAddress = instance.Reader.ReadStruct<long>(instance.Game.XAssetPoolsAddress + (Marshal.SizeOf<XAssetPoolData>() * Index));
-                XAssetSize = instance.Reader.ReadStruct<int>(instance.Game.XAssetPoolSizesAddress + (Marshal.SizeOf<XAssetPoolSizesData>() * Index));
+                Entries = instance.Reader.ReadStruct<long>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
+                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
-                for (int i = 0; i < XAssetSize; i++)
+                for (int i = 0; i < PoolSize; i++)
                 {
-                    LuaFileXAsset header = instance.Reader.ReadStruct<LuaFileXAsset>(StartAddress + Marshal.SizeOf<XAssetPoolData>() + (i * Marshal.SizeOf<LuaFileXAsset>()));
+                    LuaFileXAsset header = instance.Reader.ReadStruct<LuaFileXAsset>(Entries + Marshal.SizeOf<DBAssetPool>() + (i * Marshal.SizeOf<LuaFileXAsset>()));
 
-                    if (IsNullXAsset(header.NamePointer))
+                    if (IsNullXAsset(header.Name))
                     {
                         continue;
                     }
-                    else if (!(header.Size != 0 && header.Size2 == 2))
+                    else if (header.Len == 0)
                     {
                         continue;
                     }
 
                     results.Add(new GameXAsset()
                     {
-                        Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
+                        Name = instance.Reader.ReadNullTerminatedString(header.Name),
                         Type = Name,
-                        Size = XAssetSize,
+                        Size = ElementSize,
                         XAssetPool = this,
-                        HeaderAddress = StartAddress + Marshal.SizeOf<XAssetPoolData>() + (i * Marshal.SizeOf<LuaFileXAsset>()),
+                        HeaderAddress = Entries + Marshal.SizeOf<DBAssetPool>() + (i * Marshal.SizeOf<LuaFileXAsset>()),
                     });
                 }
 
@@ -74,7 +74,7 @@ namespace JekyllLibrary.Library
             {
                 LuaFileXAsset header = instance.Reader.ReadStruct<LuaFileXAsset>(xasset.HeaderAddress);
 
-                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.Name))
                 {
                     return JekyllStatus.MemoryChanged;
                 }
@@ -82,7 +82,7 @@ namespace JekyllLibrary.Library
                 string path = Path.Combine(instance.ExportPath, xasset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                byte[] buffer = instance.Reader.ReadBytes(header.DataPointer, header.Size);
+                byte[] buffer = instance.Reader.ReadBytes(header.Buffer, header.Len);
                 File.WriteAllBytes(path, buffer);
 
                 Console.WriteLine($"Exported {xasset.Type} {xasset.Name}");

@@ -11,19 +11,19 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "TrueType Font";
 
-            public override int Index => (int)XAssetPool.ttf;
+            public override int Index => (int)XAssetType.ttf;
 
-            public override long EndAddress { get { return StartAddress + (XAssetCount * XAssetSize); } set => throw new NotImplementedException(); }
+            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
 
             /// <summary>
-            /// Structure of a WWII TTF XAsset.
+            /// Structure of a WWII TTFDef.
             /// </summary>
-            private struct TTFXAsset
+            private struct TTFDef
             {
-                public long NamePointer { get; set; }
-                public int Size { get; set; }
-                public long DataPointer { get; set; }
-                public int NullPadding { get; set; }
+                public long Name { get; set; }
+                public int FileLen { get; set; }
+                public long File { get; set; }
+                public int FtFace { get; set; }
             }
 
             /// <summary>
@@ -35,33 +35,33 @@ namespace JekyllLibrary.Library
             {
                 List<GameXAsset> results = new List<GameXAsset>();
 
-                StartAddress = instance.Reader.ReadStruct<long>(instance.Game.XAssetPoolsAddress + (Marshal.SizeOf<XAssetPoolData>() * Index));
-                XAssetSize = instance.Reader.ReadStruct<int>(instance.Game.XAssetPoolSizesAddress + (Marshal.SizeOf<XAssetPoolSizesData>() * Index));
+                Entries = instance.Reader.ReadStruct<long>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
+                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
-                for (int i = 0; i < XAssetSize; i++)
+                for (int i = 0; i < PoolSize; i++)
                 {
-                    TTFXAsset header = instance.Reader.ReadStruct<TTFXAsset>(StartAddress + Marshal.SizeOf<XAssetPoolData>() + (i * Marshal.SizeOf<TTFXAsset>()));
+                    TTFDef header = instance.Reader.ReadStruct<TTFDef>(Entries + Marshal.SizeOf<DBAssetPool>() + (i * Marshal.SizeOf<TTFDef>()));
 
-                    if (IsNullXAsset(header.NamePointer))
+                    if (IsNullXAsset(header.Name))
                     {
                         continue;
                     }
-                    else if (header.Size == 1)
+                    else if (header.FileLen == 0)
                     {
                         continue;
                     }
-                    else if (instance.Reader.ReadNullTerminatedString(header.NamePointer).EndsWith(".ttf") is false)
+                    else if (instance.Reader.ReadNullTerminatedString(header.Name).EndsWith(".ttf") is false)
                     {
                         continue;
                     }
 
                     results.Add(new GameXAsset()
                     {
-                        Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
+                        Name = instance.Reader.ReadNullTerminatedString(header.Name),
                         Type = Name,
-                        Size = XAssetSize,
+                        Size = ElementSize,
                         XAssetPool = this,
-                        HeaderAddress = StartAddress + Marshal.SizeOf<XAssetPoolData>() + (i * Marshal.SizeOf<TTFXAsset>()),
+                        HeaderAddress = Entries + Marshal.SizeOf<DBAssetPool>() + (i * Marshal.SizeOf<TTFDef>()),
                     });
                 }
 
@@ -76,9 +76,9 @@ namespace JekyllLibrary.Library
             /// <returns>Status of the export operation.</returns>
             public override JekyllStatus Export(GameXAsset xasset, JekyllInstance instance)
             {
-                TTFXAsset header = instance.Reader.ReadStruct<TTFXAsset>(xasset.HeaderAddress);
+                TTFDef header = instance.Reader.ReadStruct<TTFDef>(xasset.HeaderAddress);
 
-                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                if (xasset.Name != instance.Reader.ReadNullTerminatedString(header.Name))
                 {
                     return JekyllStatus.MemoryChanged;
                 }
@@ -86,7 +86,7 @@ namespace JekyllLibrary.Library
                 string path = Path.Combine(instance.ExportPath, xasset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                byte[] buffer = instance.Reader.ReadBytes(header.DataPointer, header.Size);
+                byte[] buffer = instance.Reader.ReadBytes(header.File, header.FileLen);
                 File.WriteAllBytes(path, buffer);
 
                 Console.WriteLine($"Exported {xasset.Type} {xasset.Name}");

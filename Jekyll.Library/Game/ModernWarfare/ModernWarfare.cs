@@ -32,14 +32,15 @@ namespace JekyllLibrary.Library
         public long BaseAddress { get; set; }
 
         /// <summary>
-        /// Gets or sets the XAsset Pools address of Modern Warfare.
+        /// Gets or sets the DBAssetPools address of Modern Warfare.
         /// </summary>
-        public long XAssetPoolsAddress { get; set; }
+        public long DBAssetPools { get; set; }
 
         /// <summary>
-        /// Gets or sets the XAsset Pool Sizes address of Modern Warfare (unused, stored in pool data.)
+        /// Gets or sets the DBAssetPoolSizes address of Modern Warfare.
+        /// Not used for this title, instead, it is stored in DBAssetPool.
         /// </summary>
-        public long XAssetPoolSizesAddress { get; set; }
+        public long DBAssetPoolSizes { get; set; }
 
         /// <summary>
         /// Gets or sets the list of XAsset Pools of Modern Warfare.
@@ -47,9 +48,9 @@ namespace JekyllLibrary.Library
         public List<IXAssetPool> XAssetPools { get; set; }
 
         /// <summary>
-        /// XAsset Pools of Modern Warfare.
+        /// XAsset Types of Modern Warfare.
         /// </summary>
-        private enum XAssetPool : int
+        private enum XAssetType : int
         {
             physicslibrary,
             physicssfxeventasset,
@@ -173,16 +174,16 @@ namespace JekyllLibrary.Library
         /// <summary>
         /// Structure of a Modern Warfare XAsset Pool.
         /// </summary>
-        public struct XAssetPoolData
+        public struct DBAssetPool
         {
-            public long PoolPointer { get; set; }
-            public long FreeHeaderPointer { get; set; }
+            public long Entries { get; set; }
+            public long FreeHead { get; set; }
             public int PoolSize { get; set; }
-            public int XAssetSize { get; set; }
+            public int ElementSize { get; set; }
         }
 
         /// <summary>
-        /// Validates and sets the XAsset Pools address of Modern Warfare.
+        /// Validates and sets the DBAssetPools address of Modern Warfare.
         /// </summary>
         /// <param name="instance"></param>
         /// <returns>True if address is valid, otherwise false.</returns>
@@ -190,24 +191,38 @@ namespace JekyllLibrary.Library
         {
             BaseAddress = instance.Reader.GetBaseAddress();
 
-            var scanXAssetPools = instance.Reader.FindBytes(
+            var scanDBAssetPools = instance.Reader.FindBytes(
                 new byte?[] { 0x48, 0x8D, 0x04, 0x40, 0x4C, 0x8D, 0x8E, null, null, null, null, 0x4D, 0x8D, 0x0C, 0xC1, 0x8D, 0x42, 0xFF },
                 BaseAddress,
                 BaseAddress + instance.Reader.GetModuleMemorySize(),
                 true);
 
-            if (scanXAssetPools.Length > 0)
+            if (scanDBAssetPools.Length > 0)
             {
-                XAssetPoolsAddress = instance.Reader.ReadInt32(scanXAssetPools[0] + 0x7);
+                DBAssetPools = instance.Reader.ReadInt32(scanDBAssetPools[0] + 0x7);
 
                 // In Modern Warfare, axis_guide_createfx will always be the first entry in the XModel XAsset Pool.
-                if (instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadStruct<XAssetPoolData>(BaseAddress + XAssetPoolsAddress + (Marshal.SizeOf<XAssetPoolData>() * (int)XAssetPool.xmodel)).PoolPointer)) == "axis_guide_createfx")
+                if (GetFirstXModel(instance) == "axis_guide_createfx")
                 {
                     return true;
                 }
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Gets the first entry in the XModel XAsset Pool of Modern Warfare.
+        /// </summary>
+        /// <param name="instance"></param>
+        /// <returns>Name of the XModel.</returns>
+        public string GetFirstXModel(JekyllInstance instance)
+        {
+            long address = BaseAddress + DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * (int)XAssetType.xmodel);
+            DBAssetPool pool = instance.Reader.ReadStruct<DBAssetPool>(address);
+            long name = instance.Reader.ReadInt64(pool.Entries);
+
+            return instance.Reader.ReadNullTerminatedString(name);
         }
 
         /// <summary>

@@ -33,14 +33,14 @@ namespace JekyllLibrary.Library
         public long BaseAddress { get; set; }
 
         /// <summary>
-        /// Gets or sets the XAsset Pools address of Ghosts.
+        /// Gets or sets the DBAssetPools address of Ghosts.
         /// </summary>
-        public long XAssetPoolsAddress { get; set; }
+        public long DBAssetPools { get; set; }
 
         /// <summary>
-        /// Gets or sets the XAsset Pool Sizes address of Ghosts.
+        /// Gets or sets the DBAssetPoolSizes address of Ghosts.
         /// </summary>
-        public long XAssetPoolSizesAddress { get; set; }
+        public long DBAssetPoolSizes { get; set; }
 
         /// <summary>
         /// Gets or sets the list of XAsset Pools of Ghosts.
@@ -48,9 +48,9 @@ namespace JekyllLibrary.Library
         public List<IXAssetPool> XAssetPools { get; set; }
 
         /// <summary>
-        /// XAsset Pools of Ghosts.
+        /// XAsset Types of Ghosts.
         /// </summary>
-        private enum XAssetPool : int
+        private enum XAssetType : int
         {
             physpreset,
             phys_collmap,
@@ -118,24 +118,24 @@ namespace JekyllLibrary.Library
         }
 
         /// <summary>
-        /// Structure of an Ghosts XAsset Pool.
+        /// Structure of a Ghosts XAsset Pool.
         /// </summary>
-        public struct XAssetPoolData
+        public struct DBAssetPool
         {
-            public int FreeHeaderPointer { get; set; }
-            public int PoolEntries { get; set; }
+            public int FreeHead { get; set; }
+            public int Entries { get; set; }
         }
 
         /// <summary>
         /// Structure of an Ghosts XAsset Pool Size.
         /// </summary>
-        public struct XAssetPoolSizesData
+        public struct DBAssetPoolSize
         {
             public int PoolSize { get; set; }
         }
 
         /// <summary>
-        /// Validates and sets the XAsset Pools and XAsset Pool Sizes addresses of Ghosts.
+        /// Validates and sets the DBAssetPools and DBAssetPoolSizes addresses of Ghosts.
         /// </summary>
         /// <param name="instance"></param>
         /// <returns>True if addresses are valid, otherwise false.</returns>
@@ -144,35 +144,47 @@ namespace JekyllLibrary.Library
             BaseAddress = instance.Reader.GetBaseAddress();
             long moduleSize = instance.Reader.GetModuleMemorySize();
 
-            long[] scanXAssetPools = instance.Reader.FindBytes(
+            long[] scanDBAssetPools = instance.Reader.FindBytes(
                 new byte?[] { 0x48, 0x8B, 0xD8, 0x48, 0x85, 0xC0, 0x75, null, 0xF0, 0xFF, 0x0D },
                 BaseAddress,
                 BaseAddress + moduleSize,
                 true);
 
-            if (scanXAssetPools.Length > 0)
+            if (scanDBAssetPools.Length > 0)
             {
-                XAssetPoolsAddress = instance.Reader.ReadInt32(scanXAssetPools[0] - 0xB) + BaseAddress;
+                DBAssetPools = instance.Reader.ReadInt32(scanDBAssetPools[0] - 0xB) + BaseAddress;
 
                 if (instance.Reader.ActiveProcess.ProcessName == "iw6sp64_ship")
                 {
-                    XAssetPoolSizesAddress = instance.Reader.ReadInt32(scanXAssetPools[0] + 0x26) + BaseAddress;
+                    DBAssetPoolSizes = instance.Reader.ReadInt32(scanDBAssetPools[0] + 0x26) + BaseAddress;
                 }
                 else if (instance.Reader.ActiveProcess.ProcessName == "iw6mp64_ship")
                 {
-                    XAssetPoolSizesAddress = instance.Reader.ReadInt32(scanXAssetPools[0] + 0x1E) + BaseAddress;
+                    DBAssetPoolSizes = instance.Reader.ReadInt32(scanDBAssetPools[0] + 0x1E) + BaseAddress;
                 }
 
                 // In Ghosts, void or empty_model will always be the first entry in the XModel XAsset Pool.
-                string firstXModel = instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(instance.Reader.ReadInt64(XAssetPoolsAddress + (Marshal.SizeOf<XAssetPoolData>() * (int)XAssetPool.xmodel)) + Marshal.SizeOf<XAssetPoolData>()));
-
-                if (firstXModel == "void" || firstXModel == "empty_model")
+                if (GetFirstXModel(instance) == "void" || GetFirstXModel(instance) == "empty_model")
                 {
                     return true;
                 }
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Gets the first entry in the XModel XAsset Pool of Ghosts.
+        /// </summary>
+        /// <param name="instance"></param>
+        /// <returns>Name of the XModel.</returns>
+        public string GetFirstXModel(JekyllInstance instance)
+        {
+            long address = DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * (int)XAssetType.xmodel);
+            long pool = instance.Reader.ReadInt64(address) + Marshal.SizeOf<DBAssetPool>();
+            long name = instance.Reader.ReadInt64(pool);
+
+            return instance.Reader.ReadNullTerminatedString(name);
         }
 
         /// <summary>
