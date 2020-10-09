@@ -16,6 +16,7 @@ Run a supported Call of Duty title, then run `Jekyll.UI.exe` and allow the progr
 
 ### Call of Duty: Modern Warfare
 
+-   Key/Value Pairs
 -   Localize
 -   Lua Files\*
 -   Map Entities
