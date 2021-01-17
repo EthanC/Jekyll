@@ -12,17 +12,15 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "Localize Entry";
 
-            public override int Index => (int)XAssetType.localize;
-
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetType.ASSET_TYPE_LOCALIZE_ENTRY;
 
             /// <summary>
             /// Structure of a Black Ops II Localize XAsset.
             /// </summary>
             private struct LocalizeEntry
             {
-                public int Value { get; set; }
-                public int Name { get; set; }
+                public uint Value { get; set; }
+                public uint Name { get; set; }
             }
 
             /// <summary>
@@ -32,8 +30,8 @@ namespace JekyllLibrary.Library
             /// <returns>List of Localize XAsset objects.</returns>
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
-                Entries = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
-                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
+                Entries = instance.Reader.ReadStruct<uint>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
+                PoolSize = instance.Reader.ReadStruct<uint>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
                 Dictionary<string, string> entries = new Dictionary<string, string>();
 
@@ -53,7 +51,7 @@ namespace JekyllLibrary.Library
                         continue;
                     }
 
-                    entries.Add(key, instance.Reader.ReadNullTerminatedString(header.Value));
+                    entries.Add(key, instance.Reader.ReadNullTerminatedString(header.Value, nullCheck: true));
 
                     Console.WriteLine($"Exported {Name} {key}");
                 }
