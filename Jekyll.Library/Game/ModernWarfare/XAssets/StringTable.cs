@@ -12,9 +12,7 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "String Table";
 
-            public override int Index => (int)XAssetType.stringtable;
-
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetType.ASSET_TYPE_STRINGTABLE;
 
             /// <summary>
             /// Structure of a Modern Warfare StringTable XAsset.
@@ -44,6 +42,11 @@ namespace JekyllLibrary.Library
                 Entries = pool.Entries;
                 ElementSize = pool.ElementSize;
                 PoolSize = pool.PoolSize;
+
+                if (IsValidPool(Name, ElementSize, Marshal.SizeOf<StringTableXAsset>()) == false)
+                {
+                    return results;
+                }
 
                 for (int i = 0; i < PoolSize; i++)
                 {
@@ -85,25 +88,30 @@ namespace JekyllLibrary.Library
                 string path = Path.Combine(instance.ExportPath, xasset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                StringBuilder result = new StringBuilder();
+                StringBuilder stringTable = new StringBuilder();
 
                 int index = 0;
                 for (int x = 0; x < header.RowCount; x++)
                 {
                     for (int y = 0; y < header.ColumnCount; y++)
                     {
-                        int stringIndex = instance.Reader.ReadInt16(header.CellIndices + (2 * index));
-                        string str = instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(header.Strings + (8 * stringIndex)));
+                        int cell = instance.Reader.ReadInt16(header.CellIndices + (2 * index));
+                        string value = instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(header.Strings + (8 * cell)));
 
-                        result.Append($"{str},");
+                        stringTable.Append(value);
+
+                        if (y != (header.ColumnCount - 1))
+                        {
+                            stringTable.Append(",");
+                        }
 
                         index++;
                     }
 
-                    result.AppendLine();
+                    stringTable.AppendLine();
                 }
 
-                File.WriteAllText(path, result.ToString());
+                File.WriteAllText(path, stringTable.ToString());
 
                 Console.WriteLine($"Exported {xasset.Type} {xasset.Name}");
 

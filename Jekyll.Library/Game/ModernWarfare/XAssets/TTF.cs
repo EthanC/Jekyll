@@ -11,9 +11,7 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "TrueType Font";
 
-            public override int Index => (int)XAssetType.ttf;
-
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetType.ASSET_TYPE_TTF;
 
             /// <summary>
             /// Structure of a Modern Warfare TTFDef.
@@ -40,6 +38,11 @@ namespace JekyllLibrary.Library
                 Entries = pool.Entries;
                 ElementSize = pool.ElementSize;
                 PoolSize = pool.PoolSize;
+
+                if (IsValidPool(Name, ElementSize, Marshal.SizeOf<TTFDef>()) == false)
+                {
+                    return results;
+                }
 
                 for (int i = 0; i < PoolSize; i++)
                 {

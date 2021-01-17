@@ -12,9 +12,7 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "Key/Value Pair";
 
-            public override int Index => (int)XAssetType.keyvaluepairs;
-
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetType.ASSET_TYPE_KEYVALUEPAIRS;
 
             /// <summary>
             /// Structure of a Modern Warfare KeyValuePairs XAsset.
@@ -36,14 +34,21 @@ namespace JekyllLibrary.Library
             /// Load the valid XAssets for the Key/Value Pairs XAsset Pool.
             /// </summary>
             /// <param name="instance"></param>
-            /// <returns>List of Localize XAsset objects.</returns>
+            /// <returns>List of Key/Value Pairs XAsset objects.</returns>
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
+                List<GameXAsset> results = new List<GameXAsset>();
+
                 DBAssetPool pool = instance.Reader.ReadStruct<DBAssetPool>(instance.Game.BaseAddress + instance.Game.DBAssetPools + (Index * Marshal.SizeOf<DBAssetPool>()));
 
                 Entries = pool.Entries;
                 ElementSize = pool.ElementSize;
                 PoolSize = pool.PoolSize;
+
+                if (IsValidPool(Name, ElementSize, Marshal.SizeOf<KeyValuePairsXAsset>()) == false)
+                {
+                    return results;
+                }
 
                 Dictionary<string, string> entries = new Dictionary<string, string>();
 
@@ -79,7 +84,7 @@ namespace JekyllLibrary.Library
                     file.Write(JsonConvert.SerializeObject(entries, Formatting.Indented));
                 }
 
-                return new List<GameXAsset>();
+                return results;
             }
 
             /// <summary>

@@ -11,9 +11,7 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "Map Entities";
 
-            public override int Index => (int)XAssetType.map_ents;
-
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetType.ASSET_TYPE_MAP_ENTS;
 
             /// <summary>
             /// Structure of a Modern Warfare MapEnts XAsset.
@@ -22,7 +20,8 @@ namespace JekyllLibrary.Library
             {
                 public long Name { get; set; }
                 public long EntityString { get; set; }
-                // TODO: Fill remaining unknown.
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1048)]
+                public byte[] Unused;
             }
 
             /// <summary>
@@ -39,6 +38,11 @@ namespace JekyllLibrary.Library
                 Entries = poolInfo.Entries;
                 ElementSize = poolInfo.ElementSize;
                 PoolSize = poolInfo.PoolSize;
+
+                if (IsValidPool(Name, ElementSize, Marshal.SizeOf<MapEntsXAsset>()) == false)
+                {
+                    return results;
+                }
 
                 for (int i = 0; i < PoolSize; i++)
                 {

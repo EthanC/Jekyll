@@ -11,9 +11,7 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "Lua File";
 
-            public override int Index => (int)XAssetType.luafile;
-
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetType.ASSET_TYPE_LUA_FILE;
 
             /// <summary>
             /// Structure of a Modern Warfare LuaFile XAsset.
@@ -40,6 +38,11 @@ namespace JekyllLibrary.Library
                 Entries = pool.Entries;
                 ElementSize = pool.ElementSize;
                 PoolSize = pool.PoolSize;
+
+                if (IsValidPool(Name, ElementSize, Marshal.SizeOf<LuaFileXAsset>()) == false)
+                {
+                    return results;
+                }
 
                 for (int i = 0; i < PoolSize; i++)
                 {

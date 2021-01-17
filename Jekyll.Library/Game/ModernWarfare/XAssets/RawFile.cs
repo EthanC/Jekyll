@@ -12,9 +12,7 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "Raw File";
 
-            public override int Index => (int)XAssetType.rawfile;
-
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetType.ASSET_TYPE_RAWFILE;
 
             /// <summary>
             /// Structure of a Modern Warfare RawFile XAsset.
@@ -41,6 +39,11 @@ namespace JekyllLibrary.Library
                 Entries = poolInfo.Entries;
                 ElementSize = poolInfo.ElementSize;
                 PoolSize = poolInfo.PoolSize;
+
+                if (IsValidPool(Name, ElementSize, Marshal.SizeOf<RawFileXAsset>()) == false)
+                {
+                    return results;
+                }
 
                 for (int i = 0; i < PoolSize; i++)
                 {
