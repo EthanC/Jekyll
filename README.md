@@ -57,6 +57,7 @@ Run a supported Call of Duty title, then run `Jekyll.UI.exe` and allow the progr
 
 ### Call of Duty: Black Ops III
 
+-   Binary HTML
 -   Localize
 -   Map Entities
 -   Raw Files
