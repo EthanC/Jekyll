@@ -25,6 +25,8 @@
 // Description: A class to help with reading the memory of other processes.
 using System;
 using System.Diagnostics;
+using System.Security.Cryptography;
+using StringDecrypt0r;
 
 namespace PhilLibX.IO
 {
@@ -78,6 +80,17 @@ namespace PhilLibX.IO
         public byte[] ReadBytes(long address, int numBytes)
         {
             return MemoryUtil.ReadBytes(Handle, address, numBytes);
+        }
+
+        /// <summary>
+        /// Reads bytes from the Processes Memory to a string
+        /// </summary>
+        /// <param name="address">The address of the data to be read.</param>
+        /// <param name="numBytes">The number of bytes to be read.</param>
+        /// <returns>Bytes read</returns>
+        public string ReadBytesToString(long address, int numBytes = 8)
+        {
+            return BitConverter.ToString(ReadBytes(address, numBytes)).Replace("-", "");
         }
 
         /// <summary>
@@ -166,9 +179,30 @@ namespace PhilLibX.IO
         /// <param name="address">Memory Address</param>
         /// <param name="bufferSize">Buffer Read Size</param>
         /// <returns>Resulting String</returns>
-        public string ReadNullTerminatedString(long address, int bufferSize = 0xFF)
+        public string ReadNullTerminatedString(long address, int bufferSize = 0xFF, bool nullCheck = false)
         {
-            return MemoryUtil.ReadNullTerminatedString(Handle, address, bufferSize);
+            return MemoryUtil.ReadNullTerminatedString(Handle, address, bufferSize, nullCheck);
+        }
+
+        /// <summary>
+        /// Reads an encrypted string from the processes' memory.
+        /// </summary>
+        /// <param name="address">Memory Address</param>
+        /// <param name="bufferSize">Buffer Read Size</param>
+        /// <returns>Resulting String</returns>
+        public string ReadT9EncryptedString(long address, int bufferSize = 3072, bool nullCheck = false)
+        {
+            string decrypted = Decrypt0r.DecryptString(ReadBytes(address, bufferSize));
+
+            if (nullCheck == true)
+            {
+                if (decrypted == "")
+                {
+                    return null;
+                }
+            }
+
+            return decrypted;
         }
 
         /// <summary>

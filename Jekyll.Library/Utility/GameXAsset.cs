@@ -18,7 +18,7 @@
         /// <summary>
         /// Gets or sets the size of the XAsset.
         /// </summary>
-        public int Size { get; set; }
+        public uint Size { get; set; }
 
         /// <summary>
         /// Gets or sets the XAsset Pool of the XAsset.

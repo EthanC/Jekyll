@@ -142,7 +142,7 @@ namespace PhilLibX.IO
         /// <returns>Resulting Data</returns>
         public static float ReadSingle(IntPtr processHandle, long address)
         {
-            return BitConverter.ToSingle(ReadBytes(processHandle, address, 2), 0);
+            return BitConverter.ToSingle(ReadBytes(processHandle, address, 4), 0);
         }
 
         /// <summary>
@@ -163,11 +163,19 @@ namespace PhilLibX.IO
         /// <param name="address">Memory Address</param>
         /// <param name="bufferSize">Buffer Read Size</param>
         /// <returns>Resulting String</returns>
-        public static string ReadNullTerminatedString(IntPtr processHandle, long address, int bufferSize = 0xFF)
+        public static string ReadNullTerminatedString(IntPtr processHandle, long address, int bufferSize = 0xFF, bool nullCheck = false)
         {
             List<byte> result = new List<byte>();
 
             byte[] buffer = ReadBytes(processHandle, address, bufferSize);
+
+            if (nullCheck == true)
+            {
+                if (buffer[0] == 0x0)
+                {
+                    return null;
+                }
+            }
 
             while (true)
             {

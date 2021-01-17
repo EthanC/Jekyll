@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace JekyllLibrary.Library
 {
@@ -20,19 +21,14 @@ namespace JekyllLibrary.Library
         public long Entries { get; set; }
 
         /// <summary>
-        /// Gets or sets the end address of the XAsset Pool.
-        /// </summary>
-        public abstract long EndAddress { get; set; }
-
-        /// <summary>
         /// Gets or sets the header size of XAssets in the XAsset Pool.
         /// </summary>
-        public int ElementSize { get; set; }
+        public uint ElementSize { get; set; }
 
         /// <summary>
         /// Gets or sets the number of slots in the XAsset Pool.
         /// </summary>
-        public int PoolSize { get; set; }
+        public uint PoolSize { get; set; }
 
         /// <summary>
         /// Loads XAssets from the specified XAsset Pool.
@@ -50,6 +46,25 @@ namespace JekyllLibrary.Library
         public bool IsNullXAsset(long nameAddress)
         {
             return nameAddress >= Entries && nameAddress <= PoolSize * ElementSize + Entries || nameAddress == 0;
+        }
+
+        /// <summary>
+        /// Determines if the structure of the XAsset Pool is valid.
+        /// </summary>
+        public bool IsValidPool(string type, uint elementSize, int structSize)
+        {
+            if (elementSize == structSize)
+            {
+                return true;
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Failed to export {type} XAsset Type, Element Size ({ElementSize}) is not equal to Struct Size ({structSize})");
+                Console.ResetColor();
+
+                return false;
+            }
         }
     }
 }
