@@ -86,6 +86,7 @@ Run a supported Call of Duty title, then run `Jekyll.UI.exe` and allow the progr
 -   Localize
 -   Map Entities
 -   Raw Files
+-   Script Files\*
 -   String Tables
 
 ### Call of Duty: Modern Warfare 3
