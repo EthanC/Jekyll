@@ -84,6 +84,7 @@ Run a supported Call of Duty title, then run `Jekyll.UI.exe` and allow the progr
 ### Call of Duty: Black Ops II
 
 -   Localize
+-   Map Entities
 -   Raw Files
 -   String Tables
 
