@@ -11,9 +11,7 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "TrueType Font";
 
-            public override int Index => (int)XAssetType.ttf;
-
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetType.ASSET_TYPE_TTF;
 
             /// <summary>
             /// Structure of a Black Ops III TTFDef.
@@ -21,8 +19,11 @@ namespace JekyllLibrary.Library
             private struct TTFDef
             {
                 public long Name { get; set; }
-                public long FileLen { get; set; }
+                public int FileLen { get; set; }
                 public long File { get; set; }
+                public long FtFace { get; set; }
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 131072)]
+                public byte[] KerningCache;
             }
 
             /// <summary>
@@ -34,17 +35,26 @@ namespace JekyllLibrary.Library
             {
                 List<GameXAsset> results = new List<GameXAsset>();
 
-                DBAssetPool pool = instance.Reader.ReadStruct<DBAssetPool>(instance.Game.DBAssetPools + (Index * Marshal.SizeOf<DBAssetPool>()));
+                XAssetPool pool = instance.Reader.ReadStruct<XAssetPool>(instance.Game.DBAssetPools + (Index * Marshal.SizeOf<XAssetPool>()));
 
-                Entries = pool.Entries;
-                ElementSize = pool.ElementSize;
-                PoolSize = pool.PoolSize;
+                Entries = pool.Pool;
+                ElementSize = pool.ItemSize;
+                PoolSize = (uint)pool.ItemCount;
+
+                if (IsValidPool(Name, ElementSize, Marshal.SizeOf<TTFDef>()) == false)
+                {
+                    return results;
+                }
 
                 for (int i = 0; i < PoolSize; i++)
                 {
                     TTFDef header = instance.Reader.ReadStruct<TTFDef>(Entries + (i * ElementSize));
 
                     if (IsNullXAsset(header.Name))
+                    {
+                        continue;
+                    }
+                    else if (header.FileLen == 0)
                     {
                         continue;
                     }
@@ -80,7 +90,7 @@ namespace JekyllLibrary.Library
                 string path = Path.Combine(instance.ExportPath, xasset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                byte[] buffer = instance.Reader.ReadBytes(header.File, (int)header.FileLen);
+                byte[] buffer = instance.Reader.ReadBytes(header.File, header.FileLen);
 
                 File.WriteAllBytes(path, buffer);
 

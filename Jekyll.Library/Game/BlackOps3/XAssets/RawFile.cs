@@ -11,9 +11,7 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "Raw File";
 
-            public override int Index => (int)XAssetType.rawfile;
-
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetType.ASSET_TYPE_RAWFILE;
 
             /// <summary>
             /// Structure of a Black Ops III RawFile XAsset.
@@ -34,11 +32,16 @@ namespace JekyllLibrary.Library
             {
                 List<GameXAsset> results = new List<GameXAsset>();
 
-                DBAssetPool pool = instance.Reader.ReadStruct<DBAssetPool>(instance.Game.DBAssetPools + (Index * Marshal.SizeOf<DBAssetPool>()));
+                XAssetPool pool = instance.Reader.ReadStruct<XAssetPool>(instance.Game.DBAssetPools + (Index * Marshal.SizeOf<XAssetPool>()));
 
-                Entries = pool.Entries;
-                ElementSize = pool.ElementSize;
-                PoolSize = pool.PoolSize;
+                Entries = pool.Pool;
+                ElementSize = pool.ItemSize;
+                PoolSize = (uint)pool.ItemCount;
+
+                if (IsValidPool(Name, ElementSize, Marshal.SizeOf<RawFileXAsset>()) == false)
+                {
+                    return results;
+                }
 
                 for (int i = 0; i < PoolSize; i++)
                 {

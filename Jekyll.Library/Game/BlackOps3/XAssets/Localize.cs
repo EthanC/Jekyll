@@ -12,9 +12,7 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "Localize Entry";
 
-            public override int Index => (int)XAssetType.localize;
-
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetType.ASSET_TYPE_LOCALIZE_ENTRY;
 
             /// <summary>
             /// Structure of a Black Ops III Localize XAsset.
@@ -32,11 +30,18 @@ namespace JekyllLibrary.Library
             /// <returns>List of Localize XAsset objects.</returns>
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
-                DBAssetPool pool = instance.Reader.ReadStruct<DBAssetPool>(instance.Game.DBAssetPools + (Index * Marshal.SizeOf<DBAssetPool>()));
+                List<GameXAsset> results = new List<GameXAsset>();
 
-                Entries = pool.Entries;
-                ElementSize = pool.ElementSize;
-                PoolSize = pool.PoolSize;
+                XAssetPool pool = instance.Reader.ReadStruct<XAssetPool>(instance.Game.DBAssetPools + (Index * Marshal.SizeOf<XAssetPool>()));
+
+                Entries = pool.Pool;
+                ElementSize = pool.ItemSize;
+                PoolSize = (uint)pool.ItemCount;
+
+                if (IsValidPool(Name, ElementSize, Marshal.SizeOf<LocalizeEntry>()) == false)
+                {
+                    return results;
+                }
 
                 Dictionary<string, string> entries = new Dictionary<string, string>();
 
@@ -56,7 +61,7 @@ namespace JekyllLibrary.Library
                         continue;
                     }
 
-                    string value = instance.Reader.ReadNullTerminatedString(header.Value);
+                    string value = instance.Reader.ReadNullTerminatedString(header.Value, nullCheck:true);
                     entries.Add(key, value);
 
                     Console.WriteLine($"Exported {Name} {key}");
@@ -70,7 +75,7 @@ namespace JekyllLibrary.Library
                     file.Write(JsonConvert.SerializeObject(entries, Formatting.Indented));
                 }
 
-                return new List<GameXAsset>();
+                return results;
             }
 
             /// <summary>
