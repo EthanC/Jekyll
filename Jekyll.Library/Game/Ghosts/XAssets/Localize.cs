@@ -12,12 +12,10 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "Localize Entry";
 
-            public override int Index => (int)XAssetType.localize;
-
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetType.ASSET_TYPE_LOCALIZE_ENTRY;
 
             /// <summary>
-            /// Structure of an Ghosts LocalizeEntry.
+            /// Structure of a Ghosts LocalizeEntry.
             /// </summary>
             private struct LocalizeEntry
             {
@@ -32,8 +30,10 @@ namespace JekyllLibrary.Library
             /// <returns>List of Localize XAsset objects.</returns>
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
+                List<GameXAsset> results = new List<GameXAsset>();
+
                 Entries = instance.Reader.ReadStruct<long>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
-                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
+                PoolSize = instance.Reader.ReadStruct<uint>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
                 Dictionary<string, string> entries = new Dictionary<string, string>();
 
@@ -53,7 +53,7 @@ namespace JekyllLibrary.Library
                         continue;
                     }
 
-                    entries.Add(key, instance.Reader.ReadNullTerminatedString(header.Value));
+                    entries.Add(key, instance.Reader.ReadNullTerminatedString(header.Value, nullCheck: true));
 
                     Console.WriteLine($"Exported {Name} {key}");
                 }
@@ -66,7 +66,7 @@ namespace JekyllLibrary.Library
                     file.Write(JsonConvert.SerializeObject(entries, Formatting.Indented));
                 }
 
-                return new List<GameXAsset>();
+                return results;
             }
 
             /// <summary>

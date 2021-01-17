@@ -12,29 +12,27 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "String Table";
 
-            public override int Index => (int)XAssetType.stringtable;
-
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetType.ASSET_TYPE_STRINGTABLE;
 
             /// <summary>
-            /// Structure of an Ghosts StringTable XAsset.
+            /// Structure of a Ghosts StringTable XAsset.
             /// </summary>
             private struct StringTableXAsset
             {
                 public long Name { get; set; }
                 public int ColumnCount { get; set; }
                 public int RowCount { get; set; }
-                public long Strings { get; set; }
+                public long Values { get; set; }
             }
 
             /// <summary>
-            /// Structure of an Ghosts StringTable String.
+            /// Structure of an Ghosts StringTable Cell.
             /// </summary>
-            private struct StringTableString
+            [StructLayout(LayoutKind.Sequential, Pack = 8)]
+            private struct StringTableCell
             {
-                public long Value { get; set; }
+                public long String { get; set; }
                 public int Hash { get; set; }
-                public int NullPadding { get; set; }
             }
 
             /// <summary>
@@ -47,7 +45,7 @@ namespace JekyllLibrary.Library
                 List<GameXAsset> results = new List<GameXAsset>();
 
                 Entries = instance.Reader.ReadStruct<long>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
-                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
+                PoolSize = instance.Reader.ReadStruct<uint>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
                 for (int i = 0; i < PoolSize; i++)
                 {
@@ -99,12 +97,17 @@ namespace JekyllLibrary.Library
                 {
                     for (int y = 0; y < header.ColumnCount; y++)
                     {
-                        StringTableString data = instance.Reader.ReadStruct<StringTableString>(header.Strings);
-                        string cell = instance.Reader.ReadNullTerminatedString(data.Value);
+                        StringTableCell data = instance.Reader.ReadStruct<StringTableCell>(header.Values);
+                        string value = instance.Reader.ReadNullTerminatedString(data.String);
 
-                        stringTable.Append($"{cell},");
+                        stringTable.Append(value);
 
-                        header.Strings += Marshal.SizeOf<StringTableString>();
+                        if (y != (header.ColumnCount - 1))
+                        {
+                            stringTable.Append(",");
+                        }
+
+                        header.Values += Marshal.SizeOf<StringTableCell>();
                     }
 
                     stringTable.AppendLine();

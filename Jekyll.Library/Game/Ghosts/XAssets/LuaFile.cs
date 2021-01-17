@@ -11,18 +11,16 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "Lua File";
 
-            public override int Index => (int)XAssetType.luafile;
-
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetType.ASSET_TYPE_LUA_FILE;
 
             /// <summary>
-            /// Structure of an Ghosts LuaFile XAsset.
+            /// Structure of a Ghosts LuaFile XAsset.
             /// </summary>
             private struct LuaFileXAsset
             {
                 public long Name { get; set; }
                 public int Len { get; set; }
-                public int StrippingType { get; set; }
+                public byte StrippingType { get; set; }
                 public long Buffer { get; set; }
             }
 
@@ -36,7 +34,7 @@ namespace JekyllLibrary.Library
                 List<GameXAsset> results = new List<GameXAsset>();
 
                 Entries = instance.Reader.ReadStruct<long>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
-                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
+                PoolSize = instance.Reader.ReadStruct<uint>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
                 for (int i = 0; i < PoolSize; i++)
                 {

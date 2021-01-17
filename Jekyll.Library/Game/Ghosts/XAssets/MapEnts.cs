@@ -11,18 +11,17 @@ namespace JekyllLibrary.Library
         {
             public override string Name => "Map Entities";
 
-            public override int Index => (int)XAssetType.map_ents;
-
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
+            public override int Index => (int)XAssetType.ASSET_TYPE_MAP_ENTS;
 
             /// <summary>
-            /// Structure of an Ghosts MapEnts XAsset.
+            /// Structure of a Ghosts MapEnts XAsset.
             /// </summary>
             private struct MapEntsXAsset
             {
                 public long Name { get; set; }
                 public long EntityString { get; set; }
-                // TODO: Fill remaining unknown.
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 236)]
+                public byte[] Unused;
             }
 
             /// <summary>
@@ -35,7 +34,7 @@ namespace JekyllLibrary.Library
                 List<GameXAsset> results = new List<GameXAsset>();
 
                 Entries = instance.Reader.ReadStruct<long>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
-                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
+                PoolSize = instance.Reader.ReadStruct<uint>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
                 for (int i = 0; i < PoolSize; i++)
                 {
