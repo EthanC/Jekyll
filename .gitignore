@@ -361,7 +361,8 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# To be released at a later date
+# Currently not available for public release
+Jekyll.Library/Game/ModernWarfare/XAssets/Weapon.cs
+Jekyll.Library/Game/ModernWarfare/XAssets/Attachment.cs
 Jekyll.Library/Game/BlackopsColdWar/
 StringDecrypt0r.dll
-Jekyll.Library/Game/ModernWarfare/XAssets/Weapon.cs
