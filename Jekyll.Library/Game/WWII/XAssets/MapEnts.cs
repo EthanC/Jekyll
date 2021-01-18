@@ -13,8 +13,6 @@ namespace JekyllLibrary.Library
 
             public override int Index => (int)XAssetType.map_ents;
 
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
-
             /// <summary>
             /// Structure of a WWII MapEnts XAsset.
             /// </summary>
@@ -22,20 +20,19 @@ namespace JekyllLibrary.Library
             {
                 public long Name { get; set; }
                 public long EntityString { get; set; }
-                // TODO: Fill remaining unknown.
             }
 
             /// <summary>
             /// Load the valid XAssets for the MapEnts XAsset Pool.
             /// </summary>
             /// <param name="instance"></param>
-            /// <returns>List of LuaFile XAsset objects.</returns>
+            /// <returns>List of MapEnts XAsset objects.</returns>
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
                 List<GameXAsset> results = new List<GameXAsset>();
 
                 Entries = instance.Reader.ReadStruct<long>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
-                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
+                PoolSize = instance.Reader.ReadStruct<uint>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
                 for (int i = 0; i < PoolSize; i++)
                 {
