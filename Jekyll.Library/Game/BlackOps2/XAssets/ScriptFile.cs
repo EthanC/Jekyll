@@ -14,7 +14,7 @@ namespace JekyllLibrary.Library
             public override int Index => (int)XAssetType.ASSET_TYPE_SCRIPTPARSETREE;
 
             /// <summary>
-            /// Structure of a Black Ops II ScriptFile XAsset.
+            /// Structure of a Black Ops II ScriptParseTree.
             /// </summary>
             private struct ScriptParseTree
             {

@@ -130,7 +130,7 @@ namespace JekyllLibrary.Library
         }
 
         /// <summary>
-        /// Structure of an Ghosts XAsset Pool Size.
+        /// Structure of a Ghosts XAsset Pool Size.
         /// </summary>
         public struct DBAssetPoolSize
         {

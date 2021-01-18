@@ -15,7 +15,7 @@ namespace JekyllLibrary.Library
             public override int Index => (int)XAssetType.ASSET_TYPE_LOCALIZE_ENTRY;
 
             /// <summary>
-            /// Structure of a Black Ops II Localize XAsset.
+            /// Structure of a Black Ops II LocalizeEntry.
             /// </summary>
             private struct LocalizeEntry
             {

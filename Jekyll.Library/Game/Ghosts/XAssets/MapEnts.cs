@@ -28,7 +28,7 @@ namespace JekyllLibrary.Library
             /// Load the valid XAssets for the MapEnts XAsset Pool.
             /// </summary>
             /// <param name="instance"></param>
-            /// <returns>List of LuaFile XAsset objects.</returns>
+            /// <returns>List of MapEnts XAsset objects.</returns>
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
                 List<GameXAsset> results = new List<GameXAsset>();

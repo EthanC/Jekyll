@@ -26,7 +26,7 @@ namespace JekyllLibrary.Library
             }
 
             /// <summary>
-            /// Structure of an Ghosts StringTable Cell.
+            /// Structure of a Ghosts StringTable Cell.
             /// </summary>
             [StructLayout(LayoutKind.Sequential, Pack = 8)]
             private struct StringTableCell

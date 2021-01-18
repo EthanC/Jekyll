@@ -48,7 +48,7 @@ namespace JekyllLibrary.Library
         public List<IXAssetPool> XAssetPools { get; set; }
 
         /// <summary>
-        /// XAsset Pools of Modern Warfare 3.
+        /// XAsset Types of Modern Warfare 3.
         /// </summary>
         private enum XAssetType : int
         {
@@ -104,7 +104,7 @@ namespace JekyllLibrary.Library
         }
 
         /// <summary>
-        /// Structure of an Modern Warfare 3 XAsset Pool.
+        /// Structure of a Modern Warfare 3 XAsset Pool.
         /// </summary>
         public struct DBAssetPool
         {
@@ -112,7 +112,7 @@ namespace JekyllLibrary.Library
         }
 
         /// <summary>
-        /// Structure of an Modern Warfare 3 XAsset Pool Size.
+        /// Structure of a Modern Warfare 3 XAsset Pool Size.
         /// </summary>
         public struct DBAssetPoolSize
         {

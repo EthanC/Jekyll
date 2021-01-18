@@ -49,7 +49,7 @@ namespace JekyllLibrary.Library
         public List<IXAssetPool> XAssetPools { get; set; }
 
         /// <summary>
-        /// XAsset Pools of Black Ops II.
+        /// XAsset Types of Black Ops II.
         /// </summary>
         private enum XAssetType : int
         {
