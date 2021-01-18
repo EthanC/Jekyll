@@ -14,8 +14,6 @@ namespace JekyllLibrary.Library
 
             public override int Index => (int)XAssetType.localize;
 
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
-
             /// <summary>
             /// Structure of an Infinite Warfare LocalizeEntry.
             /// </summary>
@@ -33,7 +31,7 @@ namespace JekyllLibrary.Library
             public override List<GameXAsset> Load(JekyllInstance instance)
             {
                 Entries = instance.Reader.ReadStruct<long>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
-                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
+                PoolSize = instance.Reader.ReadStruct<uint>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
                 Dictionary<string, string> entries = new Dictionary<string, string>();
 
