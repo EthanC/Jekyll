@@ -137,7 +137,7 @@ namespace JekyllLibrary.Library
         /// </summary>
         public struct DBAssetPoolSize
         {
-            public int PoolSize { get; set; }
+            public uint PoolSize { get; set; }
         }
 
         /// <summary>
