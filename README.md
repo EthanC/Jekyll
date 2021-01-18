@@ -106,6 +106,13 @@ Run a supported Call of Duty title, then run `Jekyll.UI.exe` and allow the progr
 -   Raw Files
 -   String Tables
 
+### Call of Duty: Modern Warfare 2
+
+-   Localize
+-   Map Entities
+-   Raw Files
+-   String Tables
+
 ## Credits
 
 -   [Scobalula](https://github.com/Scobalula) - [PhilLibX](https://github.com/Scobalula/PhilLibX)
