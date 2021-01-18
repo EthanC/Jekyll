@@ -14,8 +14,6 @@ namespace JekyllLibrary.Library
 
             public override int Index => (int)XAssetType.stringtable;
 
-            public override long EndAddress { get { return Entries + (PoolSize * ElementSize); } set => throw new NotImplementedException(); }
-
             /// <summary>
             /// Structure of a Modern Warfare Remastered StringTable XAsset.
             /// </summary>
@@ -47,7 +45,7 @@ namespace JekyllLibrary.Library
                 List<GameXAsset> results = new List<GameXAsset>();
 
                 Entries = instance.Reader.ReadStruct<long>(instance.Game.DBAssetPools + (Marshal.SizeOf<DBAssetPool>() * Index));
-                PoolSize = instance.Reader.ReadStruct<int>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
+                PoolSize = instance.Reader.ReadStruct<uint>(instance.Game.DBAssetPoolSizes + (Marshal.SizeOf<DBAssetPoolSize>() * Index));
 
                 for (int i = 0; i < PoolSize; i++)
                 {

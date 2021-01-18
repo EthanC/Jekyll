@@ -48,7 +48,7 @@ namespace JekyllLibrary.Library
         public List<IXAssetPool> XAssetPools { get; set; }
 
         /// <summary>
-        /// XAsset Pools of Modern Warfare Remastered.
+        /// XAsset Types of Modern Warfare Remastered.
         /// </summary>
         private enum XAssetType : int
         {
@@ -139,7 +139,7 @@ namespace JekyllLibrary.Library
         /// </summary>
         public struct DBAssetPoolSize
         {
-            public int PoolSize { get; set; }
+            public uint PoolSize { get; set; }
         }
 
         /// <summary>
