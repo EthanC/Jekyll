@@ -35,8 +35,6 @@ namespace JekyllLibrary.Library
 
                 Dictionary<string, string> entries = new Dictionary<string, string>();
 
-                Console.WriteLine(PoolSize);
-
                 for (int i = 0; i < PoolSize; i++)
                 {
                     LocalizeEntry header = instance.Reader.ReadStruct<LocalizeEntry>(Entries + Marshal.SizeOf<DBAssetPool>() + (i * Marshal.SizeOf<LocalizeEntry>()));

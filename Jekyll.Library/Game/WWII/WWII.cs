@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace JekyllLibrary.Library
@@ -178,8 +177,8 @@ namespace JekyllLibrary.Library
             
             if (scanDBAssetPools.Length > 0 && scanDBAssetPoolSizes.Length > 0)
             {
-                DBAssetPools = instance.Reader.ReadInt32(scanDBAssetPools[0] + Marshal.SizeOf<DBAssetPoolSize>()) + BaseAddress;
-                DBAssetPoolSizes = instance.Reader.ReadInt32(scanDBAssetPoolSizes[0] + (Marshal.SizeOf<DBAssetPool>() - 1)) + BaseAddress;
+                DBAssetPools = instance.Reader.ReadInt32(scanDBAssetPools[0] + 0x4) + BaseAddress;
+                DBAssetPoolSizes = instance.Reader.ReadInt32(scanDBAssetPoolSizes[0] + 0x3) + BaseAddress;
 
                 // In WWII, empty_model will always be the first entry in the XModel XAsset Pool.
                 if (GetFirstXModel(instance) == "empty_model")
