@@ -223,7 +223,7 @@ namespace PhilLibX.IO
             long searchAddress = startAddress;
 
             int needleIndex = 0;
-            int bufferIndex = 0;
+            int bufferIndex;
 
             while (true)
             {
@@ -236,6 +236,7 @@ namespace PhilLibX.IO
                         if (needle[needleIndex] == null)
                         {
                             needleIndex++;
+
                             continue;
                         }
 
@@ -248,7 +249,9 @@ namespace PhilLibX.IO
                                 results.Add(searchAddress + bufferIndex - needle.Length + 1);
 
                                 if (firstMatch)
+                                {
                                     return results.ToArray();
+                                }
 
                                 needleIndex = 0;
                             }
@@ -267,7 +270,9 @@ namespace PhilLibX.IO
                 searchAddress += bufferSize;
 
                 if (searchAddress > endAddress)
+                {
                     break;
+                }
             }
 
             return results.ToArray();
