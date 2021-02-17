@@ -20,7 +20,7 @@ namespace JekyllLibrary.Library
             {
                 public long Name { get; set; }
                 public long EntityString { get; set; }
-                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1048)]
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1056)]
                 public byte[] Unused;
             }
 
