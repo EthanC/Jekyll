@@ -4,7 +4,8 @@ using System.Runtime.InteropServices;
 namespace JekyllLibrary.Library
 {
     /// <summary>
-    /// Call of Duty: Infinite Warfare (IW7)
+    /// Call of Duty: Infinite Warfare
+    /// Aliases: IW7, Genesis
     /// </summary>
     public partial class InfiniteWarfare : IGame
     {

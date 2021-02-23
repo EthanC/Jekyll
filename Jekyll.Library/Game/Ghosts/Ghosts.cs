@@ -4,7 +4,8 @@ using System.Runtime.InteropServices;
 namespace JekyllLibrary.Library
 {
     /// <summary>
-    /// Call of Duty: Ghosts (IW6)
+    /// Call of Duty: Ghosts
+    /// Aliases: IW6
     /// </summary>
     public partial class Ghosts : IGame
     {

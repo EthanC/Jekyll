@@ -4,7 +4,8 @@ using System.Runtime.InteropServices;
 namespace JekyllLibrary.Library
 {
     /// <summary>
-    /// Call of Duty: Modern Warfare Remastered (H1)
+    /// Call of Duty: Modern Warfare Remastered
+    /// Aliases: H1, Pheonix
     /// </summary>
     public partial class ModernWarfareRemastered : IGame
     {

@@ -4,7 +4,8 @@ using System.Runtime.InteropServices;
 namespace JekyllLibrary.Library
 {
     /// <summary>
-    /// Call of Duty: Black Ops II (T6)
+    /// Call of Duty: Black Ops II
+    /// Aliases: T6
     /// </summary>
     public partial class BlackOps2 : IGame
     {

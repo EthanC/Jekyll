@@ -4,7 +4,8 @@ using System.Runtime.InteropServices;
 namespace JekyllLibrary.Library
 {
     /// <summary>
-    /// Call of Duty: Advanced Warfare (S1)
+    /// Call of Duty: Advanced Warfare
+    /// Aliases: S1
     /// </summary>
     public partial class AdvancedWarfare : IGame
     {

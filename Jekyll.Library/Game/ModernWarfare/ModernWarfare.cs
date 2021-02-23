@@ -7,7 +7,8 @@ using System.Runtime.InteropServices;
 namespace JekyllLibrary.Library
 {
     /// <summary>
-    /// Call of Duty: Modern Warfare (IW8)
+    /// Call of Duty: Modern Warfare
+    /// Aliases: IW8, Kronos, Odin
     /// </summary>
     public partial class ModernWarfare : IGame
     {

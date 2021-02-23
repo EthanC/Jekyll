@@ -4,7 +4,8 @@ using System.Runtime.InteropServices;
 namespace JekyllLibrary.Library
 {
     /// <summary>
-    /// Call of Duty: Modern Warfare 3 (IW5)
+    /// Call of Duty: Modern Warfare 3
+    /// Aliases: IW5
     /// </summary>
     public partial class ModernWarfare3 : IGame
     {
