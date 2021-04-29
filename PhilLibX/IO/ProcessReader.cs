@@ -23,10 +23,9 @@
 // File: IO/ProcessReader.cs
 // Author: Philip/Scobalula
 // Description: A class to help with reading the memory of other processes.
+using StringDecrypt0r;
 using System;
 using System.Diagnostics;
-using System.Security.Cryptography;
-using StringDecrypt0r;
 
 namespace PhilLibX.IO
 {

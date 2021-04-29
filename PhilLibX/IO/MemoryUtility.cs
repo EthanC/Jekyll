@@ -25,7 +25,6 @@
 // Description: Utilities for Reading/Writing to/from Process Memory
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -60,11 +59,10 @@ namespace PhilLibX.IO
         /// <returns>Bytes read</returns>
         public static byte[] ReadBytes(IntPtr processHandle, long address, int numBytes)
         {
-            // Resulting buffer
             byte[] buffer = new byte[numBytes];
-            // Request ReadProcessMemory
+
             NativeMethods.ReadProcessMemory((int)processHandle, address, buffer, buffer.Length, out int bytesRead);
-            // Return result
+
             return buffer;
         }
 

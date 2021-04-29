@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace JekyllLibrary.Library
 {
@@ -81,17 +81,28 @@ namespace JekyllLibrary.Library
                 }
 
                 string addedScriptsFolder = Path.Combine(xasset.Name.Contains("scripts") ? "" : "scripts", xasset.Name);
-                string path = Path.Combine(instance.ExportPath, addedScriptsFolder.Contains(".gsc") ? "" : addedScriptsFolder + ".gsc");
+                string path = Path.Combine(instance.ExportPath, addedScriptsFolder.Contains(".gsc") ? addedScriptsFolder + "bin" : addedScriptsFolder + ".gscbin");
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                MemoryStream DecodedCodeStream = Decode(instance.Reader.ReadBytes(header.Buffer + 2, header.CompressedLen - 2));
+                byte[] filename = Encoding.UTF8.GetBytes(xasset.Name + char.MinValue);
+                byte[] compressedLen = BitConverter.GetBytes(header.CompressedLen);
+                byte[] len = BitConverter.GetBytes(header.Len);
+                byte[] bytecodeLen = BitConverter.GetBytes(header.BytecodeLen);
+                byte[] buffer = instance.Reader.ReadBytes(header.Buffer, header.CompressedLen);
+                byte[] bytecode = instance.Reader.ReadBytes(header.Bytecode, header.BytecodeLen);
+
+                byte[] file = new byte[filename.Length + compressedLen.Length + len.Length + bytecodeLen.Length + buffer.Length + bytecode.Length];
+
+                Buffer.BlockCopy(filename, 0, file, 0, filename.Length);
+                Buffer.BlockCopy(compressedLen, 0, file, filename.Length, compressedLen.Length);
+                Buffer.BlockCopy(len, 0, file, filename.Length + compressedLen.Length, len.Length);
+                Buffer.BlockCopy(bytecodeLen, 0, file, filename.Length + compressedLen.Length + len.Length, bytecodeLen.Length);
+                Buffer.BlockCopy(buffer, 0, file, filename.Length + compressedLen.Length + len.Length + bytecodeLen.Length, buffer.Length);
+                Buffer.BlockCopy(bytecode, 0, file, filename.Length + compressedLen.Length + len.Length + bytecodeLen.Length + buffer.Length, bytecode.Length);
 
                 try
                 {
-                    using (var outputStream = new FileStream(path, FileMode.Create))
-                    {
-                        DecodedCodeStream.CopyTo(outputStream);
-                    }
+                    File.WriteAllBytes(path, file);
                 }
                 catch
                 {
@@ -101,34 +112,6 @@ namespace JekyllLibrary.Library
                 Console.WriteLine($"Exported {xasset.Type} {xasset.Name}");
 
                 return JekyllStatus.Success;
-            }
-
-            /// <summary>
-            /// Decompress the specified array of bytes.
-            /// </summary>
-            /// <param name="data"></param>
-            /// <returns></returns>
-            public static MemoryStream Decode(byte[] data)
-            {
-                MemoryStream output = new MemoryStream();
-                MemoryStream input = new MemoryStream(data);
-
-                try
-                {
-                    using (DeflateStream deflateStream = new DeflateStream(input, CompressionMode.Decompress))
-                    {
-                        deflateStream.CopyTo(output);
-                    }
-                }
-                catch
-                {
-                    return null;
-                }
-
-                output.Flush();
-                output.Position = 0;
-
-                return output;
             }
         }
     }
