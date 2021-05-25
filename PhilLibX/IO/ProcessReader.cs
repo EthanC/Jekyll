@@ -184,14 +184,35 @@ namespace PhilLibX.IO
         }
 
         /// <summary>
-        /// Reads an encrypted string from the processes' memory.
+        /// Reads an IW8 encrypted string from the processes' memory.
+        /// </summary>
+        /// <param name="address">Memory Address</param>
+        /// <param name="bufferSize">Buffer Read Size</param>
+        /// <returns>Resulting String</returns>
+        public string ReadIW8EncryptedString(long address, int bufferSize = 3072, bool nullCheck = false)
+        {
+            string decrypted = Decrypt0r.DecryptStringIW8(ReadBytes(address, bufferSize));
+
+            if (nullCheck == true)
+            {
+                if (decrypted == "")
+                {
+                    return null;
+                }
+            }
+
+            return decrypted;
+        }
+
+        /// <summary>
+        /// Reads a T9 encrypted string from the processes' memory.
         /// </summary>
         /// <param name="address">Memory Address</param>
         /// <param name="bufferSize">Buffer Read Size</param>
         /// <returns>Resulting String</returns>
         public string ReadT9EncryptedString(long address, int bufferSize = 3072, bool nullCheck = false)
         {
-            string decrypted = Decrypt0r.DecryptString(ReadBytes(address, bufferSize));
+            string decrypted = Decrypt0r.DecryptStringT9(ReadBytes(address, bufferSize));
 
             if (nullCheck == true)
             {

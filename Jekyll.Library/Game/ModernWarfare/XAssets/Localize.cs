@@ -61,7 +61,7 @@ namespace JekyllLibrary.Library
                         continue;
                     }
 
-                    string value = instance.Reader.ReadNullTerminatedString(header.Value, nullCheck: true);
+                    string value = instance.Reader.ReadIW8EncryptedString(header.Value, nullCheck: true);
                     entries.Add(key, value);
 
                     Console.WriteLine($"Exported {Name} {key}");
