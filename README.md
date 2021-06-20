@@ -18,10 +18,19 @@ Run a supported Call of Duty title, then run `Jekyll.UI.exe` and allow the progr
 
 Currently not available for public release.
 
+### Call of Duty: Modern Warfare 2 Campaign Remastered
+
+-   Localize
+-   Lua Files\*
+-   Map Entities
+-   Raw Files
+-   Script Files\*
+-   String Tables
+-   TrueType Fonts
+
 ### Call of Duty: Modern Warfare
 
 -   Key/Value Pairs
--   Localize
 -   Lua Files\*
 -   Map Entities
 -   Raw Files
