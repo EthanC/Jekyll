@@ -364,6 +364,7 @@ FodyWeavers.xsd
 # Currently not available for public release
 Jekyll.Library/Game/ModernWarfare/XAssets/Weapon.cs
 Jekyll.Library/Game/ModernWarfare/XAssets/Attachment.cs
+Jekyll.Library/Game/ModernWarfare/XAssets/Localize.cs
 Jekyll.Library/Game/BlackopsColdWar/
 StringDecrypt0r.dll
 StringDecrypt0r.zip
