@@ -7,7 +7,6 @@
     <ItemGroup>
       <Reference Include="StringDecrypt0r">
         <HintPath>..\StringDecrypt0r.dll</HintPath>
-        <Private>true</Private>
       </Reference>
     </ItemGroup>
 
