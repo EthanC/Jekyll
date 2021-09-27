@@ -5,7 +5,7 @@ namespace JekyllLibrary.Library
 {
     /// <summary>
     /// Call of Duty: Modern Warfare 2 Campaign Remastered
-    /// Aliases: H1, Pheonix
+    /// Aliases: H1, Pheonix, El Gigante
     /// </summary>
     public partial class ModernWarfare2CR : IGame
     {

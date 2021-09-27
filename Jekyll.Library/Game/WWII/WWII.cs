@@ -5,7 +5,7 @@ namespace JekyllLibrary.Library
 {
     /// <summary>
     /// Call of Duty: WWII
-    /// Aliases: S2
+    /// Aliases: S2, Stronghold
     /// </summary>
     public partial class WWII : IGame
     {
