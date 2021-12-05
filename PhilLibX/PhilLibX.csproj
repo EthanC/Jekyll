@@ -2,12 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
-
-    <ItemGroup>
-      <Reference Include="StringDecrypt0r">
-        <HintPath>..\StringDecrypt0r.dll</HintPath>
-      </Reference>
-    </ItemGroup>
 
 </Project>

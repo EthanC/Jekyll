@@ -365,7 +365,10 @@ FodyWeavers.xsd
 Jekyll.Library/Game/ModernWarfare/XAssets/Weapon.cs
 Jekyll.Library/Game/ModernWarfare/XAssets/Attachment.cs
 Jekyll.Library/Game/ModernWarfare/XAssets/Localize.cs
+Jekyll.Library/Game/ModernWarfare/XAssets/LuaFile.cs
+Jekyll.Library/Game/ModernWarfare/XAssets/MapEnts.cs
 Jekyll.Library/Game/BlackopsColdWar/
 Jekyll.Library/Game/Vanguard/
-StringDecrypt0r.dll
-StringDecrypt0r.zip
+PhilLibX/IO/Decryption.cs
+PhilLibX/IO/Kernel32.cs
+Decryption.7z

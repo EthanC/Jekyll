@@ -35,8 +35,6 @@ Currently not available for public release.
 ### Call of Duty: Modern Warfare
 
 -   Key/Value Pairs
--   Lua Files\*
--   Map Entities
 -   Raw Files
 -   Script Files\*
 -   String Tables
