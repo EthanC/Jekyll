@@ -362,11 +362,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # Currently not available for public release
-Jekyll.Library/Game/ModernWarfare/XAssets/Weapon.cs
-Jekyll.Library/Game/ModernWarfare/XAssets/Attachment.cs
-Jekyll.Library/Game/ModernWarfare/XAssets/Localize.cs
-Jekyll.Library/Game/ModernWarfare/XAssets/LuaFile.cs
-Jekyll.Library/Game/ModernWarfare/XAssets/MapEnts.cs
+Jekyll.Library/Game/ModernWarfare/
 Jekyll.Library/Game/BlackopsColdWar/
 Jekyll.Library/Game/Vanguard/
 PhilLibX/IO/Decryption.cs
